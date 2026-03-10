@@ -1,20 +1,20 @@
-# === 第一階段：建置程式碼 ===
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+# === 第一階段：建置程式碼 (改用 .NET 10 SDK) ===
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # 複製兩個專案進容器
 COPY ./WASHDAY ./WASHDAY
 COPY ./CebuCrmApi ./CebuCrmApi
 
-# 編譯並發布 WASHDAY (注意雙層資料夾與引號)
+# 編譯並發布 WASHDAY (SDK 10 可以向下相容編譯 .NET 8)
 RUN dotnet publish "./WASHDAY/WASHDAY/WASHDAY 202508.csproj" -c Release -r linux-x64 --self-contained true -o /app/publish/washday
 
 # 編譯並發布 CebuCrmApi
 RUN dotnet publish ./CebuCrmApi/CebuCrmApi.csproj -c Release -r linux-x64 --self-contained true -o /app/publish/cebucrm
 
 # === 第二階段：最終執行環境 ===
-# 【再次修正】：改用官方最穩定的 bookworm-slim (Debian 12)
-FROM mcr.microsoft.com/dotnet/runtime-deps:9.0-bookworm-slim AS final
+# 【修正點】：改用 10.0 的執行環境
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-bookworm-slim AS final
 WORKDIR /app
 
 # 複製發布好的檔案與腳本
