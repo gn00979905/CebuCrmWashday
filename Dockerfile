@@ -13,8 +13,8 @@ RUN dotnet publish "./WASHDAY/WASHDAY/WASHDAY 202508.csproj" -c Release -r linux
 RUN dotnet publish ./CebuCrmApi/CebuCrmApi.csproj -c Release -r linux-x64 --self-contained true -o /app/publish/cebucrm
 
 # === 第二階段：最終執行環境 ===
-# 【修正點】：改用 9.0-noble-slim (Ubuntu 24.04)
-FROM mcr.microsoft.com/dotnet/runtime-deps:9.0-noble-slim AS final
+# 【再次修正】：改用官方最穩定的 bookworm-slim (Debian 12)
+FROM mcr.microsoft.com/dotnet/runtime-deps:9.0-bookworm-slim AS final
 WORKDIR /app
 
 # 複製發布好的檔案與腳本
