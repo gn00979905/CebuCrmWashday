@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# 1. 啟動舊專案 (WASHDAY) 於背景執行
-# 執行檔的名稱會跟 .csproj 一樣，所以包含空白，必須加雙引號
-ASPNETCORE_URLS="http://localhost:5001" "./washday/WASHDAY 202508" &
+# 1. 啟動 WASHDAY
+# --contentRoot 指定程式檔案路徑，--urls 指定監聽位址
+./washday/"WASHDAY 202508" --urls "http://localhost:5001" --contentRoot /app/washday &
 
-# 2. 啟動新專案 (cebu-crm) 於前景執行
-ASPNETCORE_URLS="http://0.0.0.0:$PORT" ./cebucrm/CebuCrmApi
+# 2. 啟動 CebuCrmApi (門口守衛)
+# 這裡一樣指定路徑，並使用 Render 分配的 $PORT
+./cebucrm/CebuCrmApi --urls "http://0.0.0.0:$PORT" --contentRoot /app/cebucrm
