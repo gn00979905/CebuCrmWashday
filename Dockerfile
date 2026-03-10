@@ -13,7 +13,8 @@ RUN dotnet publish "./WASHDAY/WASHDAY/WASHDAY 202508.csproj" -c Release -r linux
 RUN dotnet publish ./CebuCrmApi/CebuCrmApi.csproj -c Release -r linux-x64 --self-contained true -o /app/publish/cebucrm
 
 # === 第二階段：最終執行環境 ===
-FROM mcr.microsoft.com/dotnet/runtime-deps:9.0-jammy-slim AS final
+# 【修正點】：改用 9.0-noble-slim (Ubuntu 24.04)
+FROM mcr.microsoft.com/dotnet/runtime-deps:9.0-noble-slim AS final
 WORKDIR /app
 
 # 複製發布好的檔案與腳本
@@ -21,7 +22,7 @@ COPY --from=build /app/publish/washday ./washday
 COPY --from=build /app/publish/cebucrm ./cebucrm
 COPY start.sh ./
 
-# 給予執行權限 (有空白的檔名必須加引號)
+# 給予執行權限
 RUN chmod +x ./start.sh "./washday/WASHDAY 202508" ./cebucrm/CebuCrmApi
 
 # 設定啟動腳本
