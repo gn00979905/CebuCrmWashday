@@ -1,0 +1,6 @@
+@CebuCrmApi_HostAddress = http://localhost:5288
+
+GET {{CebuCrmApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

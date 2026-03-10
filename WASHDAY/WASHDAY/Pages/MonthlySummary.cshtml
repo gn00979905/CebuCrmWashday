@@ -1,0 +1,109 @@
+﻿@page
+@model WASHDAY_202508.Pages.MonthlySummaryModel
+@{
+    ViewData["Title"] = "Monthly Summary Report";
+}
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+</head>
+<div class="d-flex justify-content-between align-items-center my-4">
+    <a class="btn btn-outline-secondary" asp-page="/MonthlySummary" asp-route-year="@Model.PreviousYear">
+        &lt; @Model.PreviousYear
+    </a>
+
+    <h1>@ViewData["Title"] (@Model.CurrentYear)</h1>
+    <!-- **新增：** 匯出按鈕 -->
+    <button id="export-summary-xlsx" class="btn btn-sm btn-outline-success mt-2">
+        <i class="bi bi-file-earmark-excel"></i> Export Excel
+    </button>
+    @if (Model.NextYear <= DateTime.Now.Year)
+    {
+        <a class="btn btn-outline-secondary" asp-page="/MonthlySummary" asp-route-year="@Model.NextYear">
+            @Model.NextYear &gt;
+        </a>
+    }
+</div>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped" style="font-size: 0.9rem;">
+        <thead class="table-dark">
+            <tr>
+                <th>MONTH</th>
+                @foreach (var category in Model.IncomeCategories)
+                {
+                    <th class="text-end">@category</th>
+                }
+                <th class="text-end table-primary">TOTAL INCOME</th>
+
+                @foreach (var category in Model.ExpenseCategories)
+                {
+                    <th class="text-end">@category</th>
+                }
+                <th class="text-end table-danger">TOTAL EXPENSE</th>
+                <th class="text-end table-success">NET INCOME</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var row in Model.ReportData)
+            {
+                <tr>
+                    <td><strong>@row.MonthName</strong></td>
+                    @foreach (var category in Model.IncomeCategories)
+                    {
+                        <td class="text-end">@row.IncomeTotals[category].ToString("N2")</td>
+                    }
+                    <td class="text-end table-primary"><strong>@row.TotalIncome.ToString("N2")</strong></td>
+
+                    @foreach (var category in Model.ExpenseCategories)
+                    {
+                        <td class="text-end">@row.ExpenseTotals[category].ToString("N2")</td>
+                    }
+                    <td class="text-end table-danger"><strong>@row.TotalExpense.ToString("N2")</strong></td>
+                    <td class="text-end table-success"><strong>@row.NetTotal.ToString("N2")</strong></td>
+                </tr>
+            }
+        </tbody>
+
+        <tfoot class="table-dark">
+            <tr>
+                <td><strong>TOTAL</strong></td>
+                @foreach (var category in Model.IncomeCategories)
+                {
+                    <td class="text-end"><strong>@Model.ReportData.Sum(r => r.IncomeTotals[category]).ToString("N2")</strong></td>
+                }
+                <td class="text-end table-primary"><strong>@Model.ReportData.Sum(r => r.TotalIncome).ToString("N2")</strong></td>
+
+                @foreach (var category in Model.ExpenseCategories)
+                {
+                    <td class="text-end"><strong>@Model.ReportData.Sum(r => r.ExpenseTotals[category]).ToString("N2")</strong></td>
+                }
+                <td class="text-end table-danger"><strong>@Model.ReportData.Sum(r => r.TotalExpense).ToString("N2")</strong></td>
+                <td class="text-end table-success"><strong>@Model.ReportData.Sum(r => r.NetTotal).ToString("N2")</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+@section Scripts {
+    <!-- 1. 引入 SheetJS -->
+    <script src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+
+    <script>
+        document.getElementById("export-summary-xlsx").addEventListener("click", function() {
+            // 2. 找到我們的 HTML 表格
+            // 注意：我們選取 table 元素。因為頁面上只有一個 table，querySelector('table') 就可以抓到
+            const tableElement = document.querySelector(".table");
+
+            // 3. 使用 SheetJS 將 HTML 表格轉換為 Workbook
+            // raw: true 確保數字被視為數字，而不是字串 (這對 Excel 加總很重要)
+            const workbook = XLSX.utils.table_to_book(tableElement, { sheet: "Summary", raw: true });
+
+            // 4. 產生檔名 (例如: Monthly_Summary_2025.xlsx)
+            const fileName = "Monthly_Summary_"+@Model.CurrentYear+".xlsx";
+
+            // 5. 下載檔案
+            XLSX.writeFile(workbook, fileName);
+        });
+    </script>
+}

@@ -1,0 +1,270 @@
+﻿@page
+@model WASHDAY_202508.Pages.EditModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card card-modern p-4">
+            <h4 class="mb-4 fw-bold">Edit Ledger Entry</h4>
+        <form method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="DailyLedger.Id" /> <div class="form-floating mb-3">
+                    <input asp-for="DailyLedger.EntryDate" class="form-control" placeholder="Select Date" />
+                    <label asp-for="DailyLedger.EntryDate"></label>
+                    <span asp-validation-for="DailyLedger.EntryDate" class="text-danger"></span>
+                </div>
+                <hr class="text-muted my-4" />
+                <h6 class="text-uppercase text-muted fw-bold mb-3" style="font-size: 0.8rem;">Income Sources</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="DailyLedger.SalesWalkIn" class="form-control" placeholder="0.00" />
+                            <label asp-for="DailyLedger.SalesWalkIn"></label>
+                            <span asp-validation-for="DailyLedger.SalesWalkIn" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="DailyLedger.SanMarino" class="form-control" placeholder="0.00" />
+                            <label asp-for="DailyLedger.SanMarino"></label>
+                            <span asp-validation-for="DailyLedger.SanMarino" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="DailyLedger.Sunvida" class="form-control" placeholder="0.00" />
+                            <label asp-for="DailyLedger.Sunvida"></label>
+                            <span asp-validation-for="DailyLedger.Sunvida" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="DailyLedger.CebuRooms" class="form-control" placeholder="0.00" />
+                            <label asp-for="DailyLedger.CebuRooms"></label>
+                            <span asp-validation-for="DailyLedger.CebuRooms" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="DailyLedger.SugbuMercado" class="form-control" placeholder="0.00" />
+                            <label asp-for="DailyLedger.SugbuMercado"></label>
+                            <span asp-validation-for="DailyLedger.SugbuMercado" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-floating">
+                            <input asp-for="DailyLedger.Others" class="form-control" placeholder="0.00" />
+                            <label asp-for="DailyLedger.Others"></label>
+                            <span asp-validation-for="DailyLedger.Others" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-floating mt-3 mb-3">
+                    <input asp-for="DailyLedger.Description" class="form-control" placeholder="Description" style="height: 100px" />
+                    <label asp-for="DailyLedger.Description"></label>
+                    <span asp-validation-for="DailyLedger.Description" class="text-danger"></span>
+                </div>
+
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <label class="control-label fw-bold">Expense Items</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openExpenseModal()">
+                        <i class="bi bi-plus-lg"></i> Add Item
+                    </button>
+                </div>
+
+                <table class="table table-bordered table-sm" id="expenses-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-center" style="width: 50px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                <input type="hidden" id="currentLedgerId" value="@Model.DailyLedger.Id" />
+            </div>
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg shadow-sm">Save Changes</button>
+                    <a asp-page="/DailyLedgers/Ledgers" class="btn btn-light text-muted">Cancel</a>
+                </div>
+        </form>
+    </div>
+</div>
+</div>
+
+@* <div>
+    <a asp-page="/DailyLedgers/Ledgers">Back to List</a>
+</div> *@
+<div class="modal fade" id="expenseItemModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Expense Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="expense-ajax-form">
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <input class="form-control" list="category-suggestions" id="modal-category" required>
+                        <datalist id="category-suggestions">
+                            <option value="Fare"></option>
+                            <option value="Transportation"></option>
+                            <option value="Food"></option>
+                            <option value="Water"></option>
+                            <option value="Utilities"></option>
+                            <option value="Detergent"></option>
+                            <option value="Salary"></option>
+                            <option value="Maintenance"></option>
+                            <option value="Rent"></option>
+                            <option value="Supplies"></option>
+                            <option value="Miscellaneous"></option>
+                            <option value="Others"></option>
+                        </datalist>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-control" id="modal-description">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount</label>
+                        <input type="number" step="0.01" class="form-control" id="modal-amount" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveExpenseItem()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        const ledgerId = document.getElementById('currentLedgerId').value;
+        const expensesTableBody = document.querySelector("#expenses-table tbody");
+        const totalExpensesInput = document.querySelector("input[name='DailyLedger.Expenses']"); // 抓取主表單的總金額欄位
+        const expenseModal = new bootstrap.Modal(document.getElementById('expenseItemModal'));
+
+        document.addEventListener("DOMContentLoaded", function () {
+            loadExpenses();
+        });
+
+        // 1. 載入費用列表
+        async function loadExpenses() {
+            try {
+                const res = await fetch(`/api/ExpenseItems/ByLedger/${ledgerId}`);
+                if (!res.ok) throw new Error("Failed to load expenses");
+                const items = await res.json();
+
+                renderTable(items);
+                updateTotalAmount(items);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // 2. 渲染表格
+        function renderTable(items) {
+            expensesTableBody.innerHTML = "";
+            if (items.length === 0) {
+                expensesTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No items yet</td></tr>`;
+                return;
+            }
+
+            items.forEach(item => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${item.category}</td>
+                    <td>${item.description || '-'}</td>
+                    <td class="text-end">₱ ${item.amount.toFixed(2)}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteExpense(${item.id})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                expensesTableBody.appendChild(tr);
+            });
+        }
+
+        // 3. 更新主表單的 Total Expenses
+        // 這樣使用者按下 Edit 頁面的 Save 時，總金額也是最新的
+        function updateTotalAmount(items) {
+            const total = items.reduce((sum, item) => sum + item.amount, 0);
+            if(totalExpensesInput) {
+                totalExpensesInput.value = total.toFixed(2);
+            }
+        }
+
+        // 4. 開啟 Modal
+        window.openExpenseModal = function() {
+            document.getElementById('expense-ajax-form').reset();
+            expenseModal.show();
+        }
+
+        // 5. 儲存費用 (AJAX POST)
+        window.saveExpenseItem = async function() {
+            const category = document.getElementById('modal-category').value;
+            const desc = document.getElementById('modal-description').value;
+            const amount = document.getElementById('modal-amount').value;
+
+            if(!category || !amount) {
+                alert("Category and Amount are required");
+                return;
+            }
+
+            const payload = {
+                category: category,
+                description: desc,
+                amount: parseFloat(amount),
+                dailyLedgerId: parseInt(ledgerId)
+            };
+
+            try {
+                const res = await fetch('/api/ExpenseItems', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if(res.ok) {
+                    expenseModal.hide();
+                    loadExpenses(); // 重新載入列表
+                    // 這裡可以加上 showToast("Saved!", "success") 如果你有引入 site.js
+                } else {
+                    alert("Failed to save");
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        }
+
+        // 6. 刪除費用 (AJAX DELETE)
+        window.deleteExpense = async function(id) {
+            if(!confirm("Delete this item?")) return;
+
+            try {
+                const res = await fetch(`/api/ExpenseItems/${id}`, { method: 'DELETE' });
+                if(res.ok) {
+                    loadExpenses();
+                } else {
+                    alert("Failed to delete");
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        }
+    </script>
+}

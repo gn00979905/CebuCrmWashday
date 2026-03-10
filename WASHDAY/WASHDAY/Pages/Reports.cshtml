@@ -1,0 +1,179 @@
+﻿@page
+@model WASHDAY_202508.Pages.ReportsModel
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="d-flex justify-content-between align-items-center my-4">
+    <a class="btn btn-outline-secondary" asp-page="/Reports" asp-route-year="@Model.PreviousMonthDate.Year" asp-route-month="@Model.PreviousMonthDate.Month">
+        &lt; Prev Month
+    </a>
+
+    @{
+        var displayDate = new DateTime(Model.CurrentYear, Model.CurrentMonth, 1);
+    }
+    <h1>Expense Report (@displayDate.ToString("MMMM yyyy"))</h1>
+
+    <div>
+        @if (Model.NextMonthDate < DateTime.Now)
+        {
+            <a class="btn btn-outline-secondary" asp-page="/Reports" asp-route-year="@Model.NextMonthDate.Year" asp-route-month="@Model.NextMonthDate.Month">
+                Next Month &gt;
+            </a>
+        }
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        @if (Model.ExpenseChartData.Any())
+        {
+            <div style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <canvas id="expenseReportChart"></canvas>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                No expense data found for this month.
+            </div>
+        }
+    </div>
+</div>
+<!-- ↓↓↓ 新增一個分隔線和年度圖表區塊 ↓↓↓ -->
+<hr class="my-5">
+
+<h2 class="text-center">Annual Report (@Model.CurrentYear)</h2>
+
+<!-- 年度圖表 Row -->
+<div class="row mt-4">
+
+    <!-- 「營收 vs. 支出趨勢圖」 (長條圖) -->
+    <div class="col-lg-8 mb-4">
+        <div style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 100%;">
+            @if (Model.AnnualSalesData.Any(s => s > 0) || Model.AnnualExpenseDataForSales.Any(e => e > 0))
+            {
+                <canvas id="revenueExpenseChart"></canvas>
+            }
+            else
+            {
+                <div class="alert alert-info text-center m-0">No annual sales or expense data found for @Model.CurrentYear.</div>
+            }
+        </div>
+    </div>
+
+    <!-- 「年度費用分析圖」 (圓環圖) -->
+    <div class="col-lg-4 mb-4">
+        <div style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 100%;">
+            @if (Model.AnnualExpenseData.Any())
+            {
+                <canvas id="annualExpenseChart"></canvas>
+            }
+            else
+            {
+                <div class="alert alert-info text-center m-0">No annual expense data found for @Model.CurrentYear.</div>
+            }
+        </div>
+    </div>
+</div>
+<!-- ↑↑↑ 新增區塊結束 ↑↑↑ -->
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // 只有在有資料時才執行繪圖
+        @if (Model.ExpenseChartData.Any())
+        {
+            <text>
+            const ctx = document.getElementById('expenseReportChart');
+            new Chart(ctx, {
+                type: 'doughnut', // 我們這次使用圓環圖
+                data: {
+                    labels: @Json.Serialize(Model.ExpenseChartLabels),
+                    datasets: [{
+                        label: 'Total Expenses',
+                        data: @Json.Serialize(Model.ExpenseChartData),
+                        backgroundColor: @Json.Serialize(Model.ExpenseChartColors),
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Expense Breakdown by Category'
+                        }
+                    }
+                }
+            });
+            </text>
+        }
+        // --- ↓↓↓ 新增：「營收 vs. 支出趨勢圖」 (長條圖) ↓↓↓ ---
+         @if (Model.AnnualSalesData.Any(s => s > 0) || Model.AnnualExpenseDataForSales.Any(e => e > 0))
+         {
+                 <text>
+                 const revExCtx = document.getElementById('revenueExpenseChart');
+                 new Chart(revExCtx, {
+                     type: 'bar', // 使用長條圖
+                     data: {
+                         labels: @Json.Serialize(Model.AnnualTrendLabels),
+                         datasets: [
+                             {
+                                 label: 'Total Revenue',
+                                 data: @Json.Serialize(Model.AnnualSalesData),
+                                 backgroundColor: 'rgba(75, 192, 192, 0.6)', // 綠色
+                                 borderWidth: 1
+                             },
+                             {
+                                 label: 'Total Expense',
+                                     data: @Json.Serialize(Model.AnnualExpenseDataForSales),
+                                 backgroundColor: 'rgba(255, 99, 132, 0.6)', // 紅色
+                                 borderWidth: 1
+                             }
+                         ]
+                     },
+                     options: {
+                         responsive: true,
+                         plugins: {
+                             legend: { position: 'top' },
+                             title: { display: true, text: 'Monthly Revenue vs. Expense' }
+                         },
+                         scales: {
+                             y: { beginAtZero: true }
+                         }
+                     }
+                 });
+                 </text>
+         }
+
+         // --- ↓↓↓ 新增：「年度費用分析圖」 (圓環圖) ↓↓↓ ---
+         @if (Model.AnnualExpenseData.Any())
+         {
+            <text>
+            const annualExpenseCtx = document.getElementById('annualExpenseChart');
+            new Chart(annualExpenseCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: @Json.Serialize(Model.AnnualExpenseLabels),
+                    datasets: [{
+                        label: 'Annual Expenses',
+                        data: @Json.Serialize(Model.AnnualExpenseData),
+                        backgroundColor: @Json.Serialize(Model.AnnualExpenseColors),
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Annual Expense Breakdown' }
+                    }
+                }
+            });
+            </text>
+         }
+    </script>
+}

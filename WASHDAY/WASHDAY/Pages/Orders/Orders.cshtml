@@ -1,0 +1,315 @@
+﻿@page
+@model WASHDAY_202508.Pages.Orders.OrdersModel
+@{
+    ViewData["Title"] = "Customer Orders";
+}
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+</head>
+<h1>@ViewData["Title"]</h1>
+<p>Manage walk-in and other customer orders.</p>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <button id="prev-month" class="btn btn-outline-secondary">&lt; Prev Month</button>
+    <h4 id="current-month-display" class="mb-0"></h4>
+    <button id="next-month" class="btn btn-outline-secondary">Next Month &gt;</button>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+
+    <div id="payment-filter-group" class="btn-group" role="group" aria-label="Payment Status Filter">
+        <input type="radio" class="btn-check" name="payment-filter" id="filter-all" value="all" autocomplete="off" checked>
+        <label class="btn btn-outline-secondary" for="filter-all">All</label>
+
+        <input type="radio" class="btn-check" name="payment-filter" id="filter-paid" value="true" autocomplete="off">
+        <label class="btn btn-outline-success" for="filter-paid">Paid</label>
+
+        <input type="radio" class="btn-check" name="payment-filter" id="filter-notpaid" value="false" autocomplete="off">
+        <label class="btn btn-outline-danger" for="filter-notpaid">Not Paid</label>
+    </div>
+
+    <div class="d-flex gap-2">
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="column-toggle-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                <i class="bi bi-eye"></i> Toggle Columns
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="column-toggle-dropdown" id="column-toggle-menu">
+                <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="orderDate" checked>Date</label></li>
+                <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="customerName" checked>Name</label></li>
+                <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="orderType" checked>Type</label></li>
+                <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="description" checked>Description</label></li>
+                <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="pieceCount">Pieces</label></li>
+                <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="amount" checked>Amount</label></li>
+                <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="isPaid" checked>Paid</label></li>
+                <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="pickupDate" checked>Out Date</label></li>
+                <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="pickupTime" checked>Out Time</label></li>
+            </ul>
+        </div>
+        <button id="add-row" class="btn btn-success"><i class="bi bi-plus-circle"></i> Add New Order</button>
+    </div>
+
+</div>
+<div id="orders-table"></div>
+
+@section Scripts{
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.6.1/dist/js/tabulator.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function ()
+        {
+            // --- 1. 從 C# PageModel 取得初始的年月 ---
+            let currentYear = @Model.InitialYear;
+            let currentMonth = @Model.InitialMonth;
+
+             // --- 2. 初始化 Tabulator 表格 ---
+            const table = new Tabulator("#orders-table",
+            {
+                height: "600px",
+                layout: "fitDataFill",
+                ajaxURL: "/api/customerorders",
+                ajaxParams: { year: @Model.InitialYear, month: @Model.InitialMonth },
+                 initialSort: [
+                    { column: "orderDate", dir: "desc" } // 初始載入時，按 entryDate 欄位降冪排序
+                ],
+                columns: [
+                    { title: "Date"       , field: "orderDate"   , editor: "date"     , hozAlign:"center" , sorter: "date",    sorterParams: { format: "yyyy-MM-dd" }},
+                    { title: "Name"       , field: "customerName", editor: "input"   },
+                    { title: "Type"       , field: "orderType"   , editor: "list",  editorParams: {values: ["Walk-in", "SMR"], autocomplete: true,listOnEmpty: true,freetext: true,clearable: true}},
+                    { title: "Description", field: "description" , editor: "input"    , width: 140 },
+                    { title: "Pieces"     , field: "pieceCount"  , editor: "number"   , visible: false, width: 98, bottomCalc: "sum" , hozAlign: "right" },
+                    { title: "Amount"     , field: "amount"      , editor: "number"   , bottomCalc: "sum" , hozAlign: "right" , editorParams: { step: 0.01 }, formatter: "money", formatterParams: { symbol: "₱ ", precision: 2 } },
+                    { title: "Paid"       , field: "isPaid"      , editor: "tickCross", formatter: "tickCross", hozAlign: "center", width: 83 },
+                    { title: "Out Date"   , field: "pickupDate"  , editor: "date"     , sorter: "date"    , sorterParams: { format: "yyyy-MM-dd" } },
+                    { title: "Out Time"   , field: "pickupTime"  , editor: "time"     , hozAlign: "center", sorter: "time", sorterParams: { format: "HH:mm" } },
+                    { formatter: "buttonCross", width: 40, hozAlign: "center", cellClick: function (e, cell) {
+                            if (confirm("Are you sure you want to delete this entry?")) {
+                                const rowData = cell.getRow().getData();
+                                fetch(`/api/customerorders/${rowData.id}`, {
+                                    method: 'DELETE',
+                                })
+                                .then(response => {
+                                    if (response.ok) {
+                                        cell.getRow().delete();
+                                        table.redraw(true);
+                                        showToast("Entry deleted successfully.", "success"); // <--- (可選) 加上成功提示
+                                    } else {
+                                        showToast("Error deleting record.", "danger"); // <--- 替換
+                                    }
+                                }).catch(error => showToast("Error: " + error.message, "danger")); // <--- 加上錯誤處理
+                            }
+                        }
+                    }
+                ],
+            });
+                        // **新增：智慧流水號計算函式**
+            function getNextSerialNumber() {
+                // 1. 取得表格中目前所有的資料
+                const allData = table.getData();
+
+                // 2. 如果沒有資料，回傳空字串
+                if (allData.length === 0) return "";
+
+                // 3. 找到「最新」的一筆資料
+                // 因為我們的表格預設可能是依照日期降冪排序 (最新的在最上面)，或者使用者可能自己排序過
+                // 最保險的方法是找出 OrderDate 最晚，或是 ID 最大，或是直接取表格的第一列 (如果是按時間排序的話)
+
+                // 這裡我們假設表格是依照日期降冪排序的 (最新的在最上面 row 0)
+                // 為了保險，我們遍歷前幾筆，找到第一個有 Description 的
+                let lastDesc = "";
+                const rows = table.getRows(); // 取得排序後的列
+
+                if (rows.length > 0) {
+                    // 取第一列 (通常是最新的) 的資料
+                    lastDesc = rows[0].getData().description;
+                }
+
+                // 4. 嘗試解析並加 1
+                if (lastDesc) {
+                    // 使用正規表達式提取字串中的數字
+                    // 例如: "9569301" -> 9569301
+                    // 例如: "No. 100" -> 100
+                    const match = lastDesc.match(/(\d+)/);
+
+                    if (match) {
+                        const currentNumber = parseInt(match[0], 10);
+                        // 檢查是否為有效數字
+                        if (!isNaN(currentNumber)) {
+                            const nextNumber = currentNumber + 1;
+
+                            // 聰明的小細節：如果原數字有前導零 (例如 005)，我們也要試著保留 (雖然數字轉字串通常會不見，但在流水號場景通常是純數字)
+                            // 這裡簡單回傳數字字串
+                            return nextNumber.toString();
+                        }
+                    }
+                }
+
+                return "";
+            }
+
+            // **===== ↓↓↓ 有沒有付錢的filter ↓↓↓ =====**
+            // 取得所有篩選按鈕
+            const filterButtons = document.querySelectorAll("#payment-filter-group input[name='payment-filter']");
+            // 為每個按鈕加上 'change' 事件監聽
+            filterButtons.forEach(button => {
+                button.addEventListener("change", function() {
+                    const filterValue = this.value; // 取得被選中按鈕的值 (all, true, false)
+
+                    // 使用 Tabulator 的 setFilter 方法
+                    if (filterValue === "all") {
+                        table.clearFilter(); // 清除所有篩選
+                    } else {
+                        // **關鍵點：** 我們的 "isPaid" 欄位資料是布林值 (boolean)
+                        // 所以我們要將字串 "true" / "false" 轉換成真正的布林值 true / false
+                        const booleanValue = (filterValue === "true");
+
+                        table.setFilter("isPaid", "=", booleanValue);
+                    }
+                });
+            });
+            // **===== ↑↑↑ 有沒有付錢的filter結束 ↑↑↑ =====**
+
+            // **===== ↓↓↓ 自訂顯示的欄位 監聽 start ↓↓↓ =====**
+            // 取得所有欄位切換的勾選框
+            const columnCheckboxes = document.querySelectorAll("#column-toggle-menu input[type='checkbox']");
+            // 為每個勾選框加上 'change' 事件監聽
+            columnCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener("change", function() {
+                    const colName = this.value; // 取得欄位的 'field' 名稱
+                    if (this.checked) {
+                        table.showColumn(colName); // 顯示欄位
+                    } else {
+                        table.hideColumn(colName); // 隱藏欄位
+                    }
+                });
+            });
+            // **===== ↑↑↑ 自訂顯示的欄位結束 ↑↑↑ =====**
+
+             // --- 3. 建立一個用來更新標題和觸發資料重載的函式 ---
+            function updateTable() {
+                // 更新月份顯示標題
+                const displayDate = new Date(currentYear, currentMonth - 1);
+                const monthName = displayDate.toLocaleString('en-US', { month: 'long' });
+                document.getElementById("current-month-display").innerText = `${monthName} ${currentYear}`;
+
+                // 使用 setData 來"重新"載入資料
+                table.setData("/api/customerorders", { year: currentYear, month: currentMonth });
+            }
+
+            // --- 4. 綁定按鈕的點擊事件 ---
+            document.getElementById("prev-month").addEventListener("click", function(){
+                currentMonth--;
+                if (currentMonth < 1) {
+                    currentMonth = 12;
+                    currentYear--;
+                }
+                updateTable();
+            });
+
+            document.getElementById("next-month").addEventListener("click", function(){
+                currentMonth++;
+                if (currentMonth > 12) {
+                    currentMonth = 1;
+                    currentYear++;
+                }
+                updateTable();
+            });
+
+            // --- 5. 更新首次載入的標題 ---
+            const initialDisplayDate = new Date(currentYear, currentMonth - 1);
+            const initialMonthName = initialDisplayDate.toLocaleString('en-US', { month: 'long' });
+            document.getElementById("current-month-display").innerText = `${initialMonthName} ${currentYear}`;
+
+            table.on("cellEdited", function(cell)
+            {
+                const rowData = cell.getRow().getData();
+                const payload = {
+                id: rowData.id,
+                orderDate: rowData.orderDate,
+                customerName: rowData.customerName,
+                orderType: rowData.orderType,
+                description: rowData.description,
+                pieceCount: rowData.pieceCount,
+                amount: rowData.amount,
+                isPaid: rowData.isPaid,
+                pickupDate: rowData.pickupDate,
+                pickupTime: rowData.pickupTime };
+
+                           
+                 const method = payload.id ? 'PUT' : 'POST';
+                 const url = payload.id ? `/api/customerorders/${payload.id}` : '/api/customerorders';
+    
+                fetch(url, {
+                 method: method,
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify(payload)
+                })
+                 .then(response => {
+                    if (!response.ok) return response.text().then(text => { throw new Error(text || 'Server error') });
+                    if (response.status === 204) return null;
+                    return response.json();
+                 })
+                  .then(data =>{
+                      if (method === 'POST' && data)
+                      {
+                           cell.getRow().update(data);
+                           //table.redraw(true); // 重繪表格以更新計算
+                           showToast("New Order added.", "success");
+                      }
+                      else
+                      {
+                          const rowData = cell.getRow().getData();
+                          if(rowData.orderDate  > rowData.pickupDate)
+                          {
+                              showToast("Reminder: The Out Date must be on or after the Walk-In Date ("+rowData.orderDate+")", "warning", 18000); // <--- 替換
+                          }
+                          showToast("Order updated.", "success");
+                          // 如果是更新，只需重繪表格即可
+                          //table.redraw(true);
+                      }
+                 })
+                 .catch(error => {
+                     console.error('Error saving data:', error);
+                     showToast("Failed to save data. Please reload the webside (F5) and try again. ", "danger"); // <--- 替換
+                     // 復原變更，避免前端顯示的資料和後端不一致
+                     cell.restoreOldValue();
+                 });
+            });
+             document.getElementById("add-row").addEventListener("click", function ()
+             {
+                  const nextDesc = getNextSerialNumber();
+                  //不是本月新增產生該月日期
+                  if(currentMonth != @Model.InitialMonth)
+                  {
+                      const displayDate = new Date(currentYear, currentMonth).toISOString().slice(0, 10);
+                      // 新增一列
+                      //table.addRow({ entryDate: displayDate}, true);
+                        table.addRow({ orderDate: displayDate, orderType: "Walk-in", description: nextDesc,amount:0 }, true).then(function(row){
+                        const cusCell = row.getCell("customerName");
+                        if(cusCell) {
+                            cusCell.edit();
+                          }
+                      });
+                  }
+                  else
+                  {
+                        const today = new Date().toISOString().slice(0, 10);// 預設今天日期
+                        // 新增一列
+                        //table.addRow({ entryDate: today}, true);
+                            table.addRow({ orderDate: today, orderType: "Walk-in", description: nextDesc,amount:0 }, true).then(function(row){
+                            // 優化體驗：新增後，直接將焦點移到 Description 欄位，方便使用者確認或修改
+                            // 注意：這需要 Description 欄位是可編輯的
+                            const cusCell = row.getCell("customerName");
+                            if(cusCell) {
+                                cusCell.edit();
+                            }
+                        });
+                  }
+                  // const today = new Date().toISOString().slice(0, 10);// 預設今天日期
+                  // // 新增一列，並附帶一個 isNew: true 的標記
+                  // table.addRow({ orderDate: today,orderType: "Walk-in" }, true);
+             });
+        });
+    </script>
+}

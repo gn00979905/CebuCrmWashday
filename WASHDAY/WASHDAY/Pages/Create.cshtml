@@ -1,0 +1,111 @@
+﻿@page
+@model WASHDAY_202508.Pages.CreateModel
+
+@{
+    ViewData["Title"] = "Create";
+}
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card card-modern p-4">
+            <h4 class="mb-4 fw-bold">Create Ledger Entry</h4>
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="DailyLedger.Id" /> <div class="form-floating mb-3">
+                    <input asp-for="DailyLedger.EntryDate" class="form-control" placeholder="Select Date" />
+                    <label asp-for="DailyLedger.EntryDate"></label>
+                    <span asp-validation-for="DailyLedger.EntryDate" class="text-danger"></span>
+                </div>
+                <hr class="text-muted my-4" />
+                <h6 class="text-uppercase text-muted fw-bold mb-3" style="font-size: 0.8rem;">Income Sources</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="DailyLedger.SalesWalkIn" class="form-control" placeholder="0.00" />
+                            <label asp-for="DailyLedger.SalesWalkIn"></label>
+                            <span asp-validation-for="DailyLedger.SalesWalkIn" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="DailyLedger.SanMarino" class="form-control" placeholder="0.00" />
+                            <label asp-for="DailyLedger.SanMarino"></label>
+                            <span asp-validation-for="DailyLedger.SanMarino" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="DailyLedger.Sunvida" class="form-control" placeholder="0.00" />
+                            <label asp-for="DailyLedger.Sunvida"></label>
+                            <span asp-validation-for="DailyLedger.Sunvida" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="DailyLedger.CebuRooms" class="form-control" placeholder="0.00" />
+                            <label asp-for="DailyLedger.CebuRooms"></label>
+                            <span asp-validation-for="DailyLedger.CebuRooms" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input asp-for="DailyLedger.SugbuMercado" class="form-control" placeholder="0.00" />
+                            <label asp-for="DailyLedger.SugbuMercado"></label>
+                            <span asp-validation-for="DailyLedger.SugbuMercado" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-floating">
+                            <input asp-for="DailyLedger.Others" class="form-control" placeholder="0.00" />
+                            <label asp-for="DailyLedger.Others"></label>
+                            <span asp-validation-for="DailyLedger.Others" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-floating mt-3 mb-3">
+                    <input asp-for="DailyLedger.Description" class="form-control" placeholder="Description" style="height: 100px" />
+                    <label asp-for="DailyLedger.Description"></label>
+                    <span asp-validation-for="DailyLedger.Description" class="text-danger"></span>
+                </div>
+
+@*                 <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="control-label fw-bold">Expense Items</label>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="openExpenseModal()">
+                            <i class="bi bi-plus-lg"></i> Add Item
+                        </button>
+                    </div>
+
+                    <table class="table table-bordered table-sm" id="expenses-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th class="text-end">Amount</th>
+                                <th class="text-center" style="width: 50px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    <input type="hidden" id="currentLedgerId" value="@Model.DailyLedger.Id" />
+                </div> *@
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg shadow-sm">Save Changes</button>
+                    <a asp-page="/DailyLedgers/Ledgers" class="btn btn-light text-muted">Cancel</a>
+                </div>
+            </form>
+    </div>
+</div>
+</div>
+
+<div>
+    <a asp-page="/LedgerGrid">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

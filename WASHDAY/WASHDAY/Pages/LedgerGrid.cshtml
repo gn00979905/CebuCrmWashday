@@ -1,0 +1,471 @@
+﻿@page
+@model WASHDAY_202508.Pages.LedgerGridModel
+@{
+    ViewData["Title"] = "Ledger (Excel Mode)";
+}
+@* <style>
+    /* 增加列的高度，讓手指好點擊 */
+    .tabulator-row {
+        min-height: 50px !important;
+    }
+
+    .tabulator-cell {
+        height: 50px !important;
+        display: flex;
+        align-items: center; /* 垂直置中 */
+    }
+
+    /* 讓摺疊按鈕明顯一點 */
+    .tabulator-responsive-collapse-toggle {
+        background: #6c757d; /* 灰色 */
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        font-size: 14px;
+        font-weight: bold;
+        /* margin-right: 5px; */
+    }
+
+        /* 摺疊按鈕打開時 */
+        .tabulator-responsive-collapse-toggle.open {
+            background: #0d6efd; /* 展開時變藍色 */
+        }
+    /*
+            .tabulator-responsive-collapse-toggle.close {
+                display:none;
+            } */
+</style> *@
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+</head>
+<h1>@ViewData["Title"]</h1>
+<h5>More Friendly for laptop use</h5>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <button id="prev-month" class="btn btn-outline-secondary">&lt; Prev Month</button>
+    <h4 id="current-month-display" class="mb-0"></h4>
+    <button id="next-month" class="btn btn-outline-secondary">Next Month &gt;</button>
+</div>
+@* <div class="d-flex justify-content-between align-items-center mb-2">*@
+@* <button id="all-month" class="btn btn-primary">Show all row</button> *@
+@* <button id="add-row" class="btn btn-success">Add New Entry</button> *@
+@* </div> *@
+
+@* <div class="d-flex justify-content-end mb-2"> *@
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <button id="download-xlsx" class="btn btn-outline-success">
+        <i class="bi bi-file-earmark-excel"></i> Export to Excel
+    </button>
+    @* <button id="add-row" class="btn btn-success d-none d-md-block"> *@
+    <button id="add-row" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Add Entry
+    </button>
+</div>
+<div class="d-flex justify-content-end mb-2 gap-2">
+    <div class="dropdown">
+        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="column-toggle-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+            <i class="bi bi-eye"></i> Toggle Columns
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="column-toggle-dropdown" id="column-toggle-menu">
+            <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="entryDate" checked>Date</label></li>
+            <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="salesWalkIn" checked>Walk-in</label></li>
+            <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="sanMarino" checked>Walk-in</label></li>
+
+            <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="sunvida" checked>Sunvida</label></li>
+            <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="cebuRooms" checked>Cebu Rooms</label></li>
+            <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="sugbuMercado">Sugbu</label></li>
+            <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="others" checked>Others</label></li>
+            <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="expenses" checked>Expenses</label></li>
+            <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="description" checked>Desc</label></li>
+            <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="totalSales" checked>TotalSales</label></li>
+            <li><label class="dropdown-item ps-3 pe-3"><input type="checkbox" class="form-check-input me-2" value="netSales" checked>NetSales</label></li>
+        </ul>
+    </div>
+</div>
+
+<div id="ledger-table"></div>
+<div class="modal fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="expenseModalLabel">Manage Expenses for Date</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="currentLedgerId" />
+
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th class="text-end">Amount</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="expense-items-list">
+                    </tbody>
+                </table>
+
+                <hr />
+
+                <h6>Add New Expense Item</h6>
+                <form id="add-expense-form" class="row gx-3 gy-2 align-items-center">
+                    <datalist id="category-suggestions">
+                        <option value="Fare"></option>
+                        <option value="Transportation"></option>
+                        <option value="Food"></option>
+                        <option value="Water"></option>
+                        <option value="Utilities"></option>
+                        <option value="Detergent"></option>
+                        <option value="Salary"></option>
+                        <option value="Maintenance"></option>
+                        <option value="Rent"></option>
+                        <option value="Supplies"></option>
+                        <option value="Miscellaneous"></option>
+                        <option value="Others"></option>
+                    </datalist>
+                    <div class="col-sm-3">
+                        <input type="text" class="form-control" id="expenseCategory" placeholder="Category (e.g., Fare)" required list="category-suggestions">
+                    </div>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" id="expenseDescription" placeholder="Description">
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="input-group">
+                            <span class="input-group-text">₱</span>
+                            <input type="number" step="0.01" class="form-control" id="expenseAmount" placeholder="Amount" required>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">Add</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://oss.sheetjs.com/sheetjs/xlsx.full.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.6.1/dist/js/tabulator.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // --- 1. 從 C# PageModel 取得初始的年月 ---
+            let currentYear = @Model.InitialYear;
+            let currentMonth = @Model.InitialMonth;
+             // --- 全局變數 ---
+            const expenseModal = new bootstrap.Modal(document.getElementById('expenseModal'));
+            const expenseModalLabel = document.getElementById('expenseModalLabel');
+            const currentLedgerIdInput = document.getElementById('currentLedgerId');
+            const expenseItemsList = document.getElementById('expense-items-list');
+            const addExpenseForm = document.getElementById('add-expense-form');
+
+            // --- 2. 初始化 Tabulator 表格 ---
+            const table = new Tabulator("#ledger-table", {
+                height: "600px",
+                layout: "fitDataFill",
+
+                // **修正點 1：** 將首次資料載入的設定移回建構子中
+                ajaxURL: "/api/ledger", // API 位址
+                ajaxParams: { year: @Model.InitialYear, month: @Model.InitialMonth }, // 使用 Razor 頁面模型提供的初始年月
+                 // --- 在這裡加入 initialSort 設定 ---
+                initialSort: [
+                    { column: "entryDate", dir: "desc" } // 初始載入時，按 entryDate 欄位降冪排序
+                ],
+                // ------------------------------------
+
+                columns: [
+                    { title: "Date"        , field: "entryDate"   , editor: "date"   , hozAlign:"center", sorter: "date",    sorterParams: { format: "yyyy-MM-dd" }},
+                    { title: "Walk-in"     , field: "salesWalkIn" , editor: "number" , bottomCalc: "sum", hozAlign: "right", editorParams: { step: 0.01 }, formatter: "money", formatterParams: { symbol: "₱ ", precision: 2 } },
+                    { title: "San Marino"  , field: "sanMarino"   , editor: "number" , bottomCalc: "sum", hozAlign: "right", editorParams: { step: 0.01 }, formatter: "money", formatterParams: { symbol: "₱ ", precision: 2 } },
+                    { title: "Sunvida"     , field: "sunvida"     , editor: "number" , bottomCalc: "sum", hozAlign: "right", editorParams: { step: 0.01 }, formatter: "money", formatterParams: { symbol: "₱ ", precision: 2 } },
+                    { title: "Cebu Rooms"  , field: "cebuRooms"   , editor: "number" , bottomCalc: "sum", hozAlign: "right", editorParams: { step: 0.01 }, formatter: "money", formatterParams: { symbol: "₱ ", precision: 2 } },
+                    { title: "Sugbu"       , field: "sugbuMercado", editor: "number" , bottomCalc: "sum", visible: false, hozAlign: "right", editorParams: { step: 0.01 }, formatter: "money", formatterParams: { symbol: "₱ ", precision: 2 } },
+                    
+                    { title: "Others"      , field: "others"      , editor: "number" , bottomCalc: "sum", hozAlign: "right", editorParams: { step: 0.01 }, formatter: "money", formatterParams: { symbol: "₱ ", precision: 2 } },
+                    // { title: "Expenses"    , field: "expenses"    , editor: "number" , bottomCalc: "sum", hozAlign: "right", editorParams: { step: 0.01 }, formatter: "money", formatterParams: { symbol: "₱ ", precision: 2 } },
+                     // **修正點：** Expenses 欄位不再可編輯，而是點擊觸發 Modal
+                    {   title: "Expenses",
+                        field: "expenses",
+                        bottomCalc: "sum",
+                        hozAlign: "right",
+                        formatter: "money",
+                        formatterParams: { symbol: "₱ ", precision: 2 },
+                        cellClick: function(e, cell) {
+                            const rowData = cell.getRow().getData();
+                            openExpenseModal(rowData.id, rowData.entryDate);
+                        }
+                    },
+                    {   title: "Expense Items",
+                        field: "expenseDetails", // 對應後端剛剛加的屬性
+                        visible: false,          // 畫面上隱藏 (不想讓表格太擠)
+                        download: true,          // 匯出時顯示
+                        width: 200
+                    },
+                    { title: "Desc"        , field: "description" , editor: "input" },
+                    { title: "TotalSales"  , field: "totalSales"  , bottomCalc: "sum", hozAlign: "right", formatter: "money", formatterParams: { symbol: "₱ ", precision: 2 } },
+                    { title: "NetSales"    , field: "netSales"    , bottomCalc: "sum", hozAlign: "right", formatter: "money", formatterParams: { symbol: "₱ ", precision: 2 } },
+                    {
+                        formatter: "buttonCross", width: 40, hozAlign: "center", cellClick: function (e, cell) {
+                            if (confirm("Are you sure you want to delete this entry?")) {
+                                const rowData = cell.getRow().getData();
+                                fetch(`/api/ledger/${rowData.id}`, {
+                                    method: 'DELETE',
+                                })
+                                .then(response => {
+                                    if (response.ok) {
+                                        cell.getRow().delete();
+                                        table.redraw(true);
+                                        showToast("Entry deleted successfully.", "success"); // <--- (可選) 加上成功提示
+                                    } else {
+                                        showToast("Error deleting record.", "danger"); // <--- 替換
+                                    }
+                                }).catch(error => showToast("Error: " + error.message, "danger")); // <--- 加上錯誤處理
+                            }
+                        }
+                    }
+                ],
+            });
+             // **===== ↓↓↓ 自訂顯示的欄位 監聽 start ↓↓↓ =====**
+               // 取得所有欄位切換的勾選框
+            const columnCheckboxes = document.querySelectorAll("#column-toggle-menu input[type='checkbox']");
+            // 為每個勾選框加上 'change' 事件監聽
+            columnCheckboxes.forEach(checkbox=>{
+                checkbox.addEventListener("change",function() {
+                    const colName = this.value; // 取得欄位的 'field' 名稱
+                    if(this.checked)
+                    {
+                        table.showColumn(colName);
+                    }else{
+                        table.hideColumn(colName);
+                    }
+                });
+            });
+
+            // --- 費用 Modal 相關函式 ---
+
+            // 開啟 Modal 並載入費用細項
+            async function openExpenseModal(ledgerId, entryDate) {
+                expenseModalLabel.innerText = `Manage Expenses for ${entryDate}`;
+                currentLedgerIdInput.value = ledgerId;
+
+                // 載入該日期的所有費用細項
+                await loadExpenseItems(ledgerId);
+
+                expenseModal.show();
+            }
+            // 從 API 載入費用細項並顯示在 Modal 中
+            async function loadExpenseItems(ledgerId) {
+                const response = await fetch(`/api/expenseitems?dailyLedgerId=${ledgerId}`);
+                const items = await response.json();
+
+                expenseItemsList.innerHTML = ''; // 清空現有列表
+                items.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.category}</td>
+                        <td>${item.description || ''}</td>
+                        <td class="text-end">${item.amount.toFixed(2)}</td>
+                        <td><button class="btn btn-sm btn-danger" onclick="deleteExpenseItem(${item.id})">X</button></td>
+                    `;
+                    expenseItemsList.appendChild(row);
+                });
+            }
+            // 處理新增一筆費用
+            addExpenseForm.addEventListener('submit', async function(e)
+            {
+                e.preventDefault();
+                const ledgerId = currentLedgerIdInput.value;
+                const newExpense = {
+                    category: document.getElementById('expenseCategory').value,
+                    description: document.getElementById('expenseDescription').value,
+                    amount: parseFloat(document.getElementById('expenseAmount').value),
+                    dailyLedgerId: parseInt(ledgerId)
+                };
+
+                try {
+                    const response = await fetch('/api/expenseitems', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newExpense)
+                    });
+                    if (!response.ok) {
+                        throw new Error('Failed to add item.');
+                    }
+                    addExpenseForm.reset(); // 清空表單
+                    await loadExpenseItems(ledgerId); // 重新載入列表
+                    showToast("Expense item added.", "success");
+                } catch (error) {
+                    showToast(error.message, "danger");
+                }
+            });
+
+            // 處理刪除一筆費用 (掛載到 window 讓按鈕的 onclick 可以呼叫)
+            window.deleteExpenseItem = async function(itemId)
+            {
+                if (!confirm("Delete this expense item?")) return;
+
+                try {
+                    const response = await fetch(`/api/expenseitems/${itemId}`, { method: 'DELETE' });
+                    if (!response.ok) {
+                        throw new Error('Failed to delete item.');
+                    }
+                    await loadExpenseItems(currentLedgerIdInput.value); // 重新載入列表
+                    showToast("Expense item deleted.", "success");
+                } catch (error) {
+                    showToast(error.message, "danger");
+                }
+            }
+
+            // 監聽 Modal 關閉事件
+            document.getElementById('expenseModal').addEventListener('hidden.bs.modal', function () {
+                // 當 Modal 關閉後，重新載入主表格的資料，以更新 Expenses 總額
+                // table.setData();
+                  table.setData("/api/ledger", { year: currentYear, month: currentMonth });
+            });
+           // --- 5. 更新首次載入的標題 ---
+            const initialDisplayDate = new Date(currentYear, currentMonth - 1);
+            const initialMonthName = initialDisplayDate.toLocaleString('en-US', { month: 'long' });
+            document.getElementById("current-month-display").innerText = `${initialMonthName} ${currentYear}`;
+            // --- 3. 建立一個用來更新標題和觸發資料重載的函式 ---
+            function updateTable() {
+                // 更新月份顯示標題
+                const displayDate = new Date(currentYear, currentMonth - 1);
+                const monthName = displayDate.toLocaleString('en-US', { month: 'long' });
+                document.getElementById("current-month-display").innerText = `${monthName} ${currentYear}`;
+
+                // 使用 setData 來"重新"載入資料
+                table.setData("/api/ledger", { year: currentYear, month: currentMonth });
+            }
+
+            // --- 4. 綁定按鈕的點擊事件 ---
+            document.getElementById("prev-month").addEventListener("click", function(){
+                currentMonth--;
+                if (currentMonth < 1) {
+                    currentMonth = 12;
+                    currentYear--;
+                }
+                updateTable();
+            });
+
+            document.getElementById("next-month").addEventListener("click", function(){
+                currentMonth++;
+                if (currentMonth > 12) {
+                    currentMonth = 1;
+                    currentYear++;
+                }
+                updateTable();
+            });
+
+            // **修正點 2：** 移除頁面載入時的 setData 呼叫，因為建構子會自動處理首次載入
+
+               // 監聽單元格編輯事件
+            table.on("cellEdited", function(cell){
+                 const rowData = cell.getRow().getData();
+                 const saveButton = document.getElementById("add-row");
+                 // 在發送請求前，先禁用按鈕以避免重複點擊
+                 saveButton.disabled = true;
+                 const payload = {
+                     id: rowData.id,
+                     entryDate: rowData.entryDate,
+                     salesWalkIn: rowData.salesWalkIn,
+                     sanMarino: rowData.sanMarino,
+                     sunvida: rowData.sunvida,
+                     cebuRooms: rowData.cebuRooms,
+                     sugbuMercado: rowData.sugbuMercado,
+                     others: rowData.others,
+                     expenses: rowData.expenses,
+                     description: rowData.description
+                 };
+
+                 const method = payload.id ? 'PUT' : 'POST';
+                 const url = payload.id ? `/api/ledger/${payload.id}` : '/api/ledger';
+
+                 fetch(url, {
+                     method: method,
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify(payload)
+                 })
+                 .then(response => {
+                         // if (!response.ok) return response.text().then(text => { throw new Error(text || 'Server error') });
+                         if (response.status === 204) return null;
+                         return response.json();
+                 })
+                 .then(data =>
+                  {
+                     if (method === 'POST' && data)
+                     {
+                         //const rowData = cell.getRow().getData();
+                          cell.getRow().update(data);
+                          table.redraw(true); // 重繪表格以更新計算
+                         //showToast("Ledger Added.", "success");
+                      }
+                      else
+                      {
+                        // 如果是更新，只需重繪表格即可
+                           table.redraw(true);
+                           showToast("Ledger Updated.", "success");
+                      }
+                 })
+                 .catch(error => {
+                    console.error('Error saving data:', error);
+                    // alert("Failed to save data. Please reload the webside (F5) and try again. ");
+                    // 復原變更，避免前端顯示的資料和後端不一致
+                     showToast("Failed to save data. Please reload the webside (F5) and try again. : " + error.message, "danger"); // <--- 替換
+                     cell.restoreOldValue();
+                 })
+                 .finally(() => {
+                     // 無論成功或失敗，都在最後重新啟用按鈕
+                     saveButton.disabled = false;
+                 });
+             });
+             document.getElementById("add-row").addEventListener("click", function ()
+             {
+                 //不是本月新增產生該月日期
+                 if(currentMonth != @Model.InitialMonth)
+                 {
+                     //取得當天日期
+                    // const lastDay = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+                    // const today = new Date().getDate();
+                    // const date = (lastDay - today) *-1;
+                    //const displayDate = new Date(currentYear, currentMonth, date).toISOString().slice(0, 10);
+
+                    const displayDate = new Date(currentYear, currentMonth).toISOString().slice(0, 10);
+                    //console.log(date);
+                   // 新增一列
+                    table.addRow({ entryDate: displayDate}, true).then(function(row){
+                        const cusCell = row.getCell("salesWalkIn");
+                        if(cusCell) {
+                            cusCell.edit();
+                          }
+                      });
+                 }
+                 else
+                 {
+                     const today = new Date().toISOString().slice(0, 10);// 預設今天日期
+                      // 新增一列
+                     table.addRow({ entryDate: today}, true).then(function(row){
+                        const cusCell = row.getCell("salesWalkIn");
+                        if(cusCell) {
+                            cusCell.edit();
+                          }
+                      });
+                 }
+             });
+                    // 處理 Excel 匯出
+                    document.getElementById("download-xlsx").addEventListener("click", function(){
+                    const showDate=    document.getElementById("current-month-display").innerText;
+                    table.download("xlsx", "LedgerData_"+showDate+".xlsx", { sheetName: showDate });
+              });
+        });
+    </script>
+}

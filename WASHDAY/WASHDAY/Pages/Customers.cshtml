@@ -1,0 +1,106 @@
+﻿@page
+@model WASHDAY_202508.Pages.CustomersModel
+@{
+    ViewData["Title"] = "Customer Management";
+}
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<h1>@ViewData["Title"]</h1>
+@* <p>Manage walk-in customer database.</p> *@
+<p>Walk-in customer management database: If needed, can let customers leave their information like name & email. In the future, emails can notify that clothes are ready, or for the advertisement/receipt, or can see their laundry history.</p>
+
+<div class="d-flex justify-content-end mb-2">
+    <button id="add-row" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Add New Customer
+    </button>
+</div>
+
+<div id="customers-table"></div>
+
+@section Scripts {
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.6.1/dist/js/tabulator.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const table = new Tabulator("#customers-table", {
+                height: "600px",
+                layout: "fitDataFill",
+                ajaxURL: "/api/customers", // 連線到新的 API
+                columns: [
+                    { title: "Name", field: "name", editor: "input", width: 200, headerFilter:"input" }, // 加上 headerFilter 方便搜尋
+                    { title: "Phone", field: "phoneNumber", editor: "input", width: 150, headerFilter:"input" },
+                    { title: "Email", field: "email", editor: "input", width: 200 },
+                    { title: "Address", field: "address", editor: "input", width: 250 },
+                    { title: "Notes", field: "notes", editor: "input" },
+                    { formatter: "buttonCross", width: 40, hozAlign: "center", cellClick: function (e, cell) {
+                            if (confirm("Delete this customer?")) {
+                                const rowData = cell.getRow().getData();
+                                fetch(`/api/customers/${rowData.id}`, { method: 'DELETE' })
+                                .then(response => {
+                                    if (response.ok) {
+                                        cell.getRow().delete();
+                                        showToast("Customer deleted.", "success");
+                                    } else {
+                                        showToast("Error deleting customer.", "danger");
+                                    }
+                                }).catch(err => showToast(err.message, "danger"));
+                            }
+                        }
+                    }
+                ],
+            });
+
+            // 處理編輯儲存
+            table.on("cellEdited", function(cell)
+            {
+                const rowData = cell.getRow().getData();
+                // 建立乾淨的 payload
+                const payload = {
+                    id: rowData.id,
+                    name: rowData.name,
+                    phoneNumber: rowData.phoneNumber,
+                    email: rowData.email,
+                    address: rowData.address,
+                    notes: rowData.notes
+                };
+
+                const method = payload.id ? 'PUT' : 'POST';
+                const url = payload.id ? `/api/customers/${payload.id}` : '/api/customers';
+
+                fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => {
+                    if (!response.ok) return response.text().then(text => { throw new Error(text || 'Server error') });
+                    if (response.status === 204) return null;
+                    return response.json();
+                })
+                .then(data => {
+                    if (method === 'POST' && data) {
+                        cell.getRow().update(data);
+                        showToast("New customer added.", "success");
+                    } else {
+                        showToast("Customer updated.", "success");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast("Failed to save: " + error.message, "danger");
+                    cell.restoreOldValue();
+                });
+            });
+
+            // 新增按鈕
+            document.getElementById("add-row").addEventListener("click", function () {
+                table.addRow({ name: "New Customer" }, true).then(function(row){
+                    // 新增後自動聚焦到 Name 欄位
+                    row.getCell("name").edit();
+                });
+            });
+        });
+    </script>
+}

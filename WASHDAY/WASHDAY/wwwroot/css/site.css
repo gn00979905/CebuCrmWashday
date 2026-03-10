@@ -1,0 +1,65 @@
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+}
+/* ---- 自訂內容寬度 ---- */
+.main-content-wrapper {
+    /* 設定最大寬度為螢幕的 90% */
+    width: 97%;
+    /* 透過 margin: 0 auto; 讓這個區塊水平置中 */
+    margin: 0 auto;
+}
+/* 現代化卡片風格 */
+.card-modern {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* 柔和陰影 */
+    transition: transform 0.2s;
+}
+
+/* 表格優化 */
+.table-modern thead th {
+    border-top: none;
+    border-bottom: 2px solid #f0f2f5;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    padding: 16px;
+}
+
+.table-modern tbody td {
+    padding: 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+/* 圓形按鈕 */
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%; /* 變圓形 */
+    margin: 0 2px;
+}

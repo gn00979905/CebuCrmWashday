@@ -1,0 +1,260 @@
+﻿@page
+@model WASHDAY_202508.Pages.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<style>
+    .kpi-card {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+        .kpi-card h3 {
+            margin: 0;
+            font-size: 16px;
+            color: #6c757d;
+        }
+
+        .kpi-card .amount {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+    .chart-container {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-top: 20px;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center my-4">
+    <a class="btn btn-outline-secondary"
+       asp-page="/Index"
+       asp-route-year="@Model.PreviousMonthDate.Year"
+       asp-route-month="@Model.PreviousMonthDate.Month">
+        &lt; Prev Month
+    </a>
+
+    @{
+        // 根據後端傳來的年月，產生當前顯示的月份標題
+        var displayDate = new DateTime(Model.CurrentYear, Model.CurrentMonth, 1);
+    }
+    <h1>Dashboard (@displayDate.ToString("MMMM yyyy"))</h1>
+
+    <div>
+        @if (Model.NextMonthDate < DateTime.Now)
+        {
+            <a class="btn btn-outline-secondary"
+               asp-page="/Index"
+               asp-route-year="@Model.NextMonthDate.Year"
+               asp-route-month="@Model.NextMonthDate.Month">
+                Next Month &gt;
+            </a>
+        }
+    </div>
+</div>
+<div class="row">
+</div>
+
+
+<div class="container">
+    @* <h1 class="my-4">Dashboard (@DateTime.Now.ToString("MMMM yyyy"))</h1> *@
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="kpi-card">
+                <h3>This Month's Total Sales</h3>
+                <p class="amount text-success">₱ @Model.DashboardData.MonthlySales.ToString("N2")</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="kpi-card">
+                <h3>This Month's Total Expenses</h3>
+                <p class="amount text-danger">₱ @Model.DashboardData.MonthlyExpenses.ToString("N2")</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="kpi-card">
+                <h3>This Month's Net Profit</h3>
+                <p class="amount text-primary">₱ @Model.DashboardData.MonthlyNetProfit.ToString("N2")</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="chart-container">
+                <h5>Daily Sales Trend</h5>
+                <canvas id="dailySalesChart"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="chart-container">
+                <h5>Sales Breakdown</h5>
+                <canvas id="salesPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+   @*  <div class="row mt-4">
+        <div class="col-lg-12">
+            <div class="chart-container">
+                <h5>Annual Sales by Month</h5>
+                <canvas id="annualSalesChart"></canvas>
+            </div>
+        </div>
+    </div> *@
+    <div class="row mt-4">
+        <div class="col-lg-12">
+            <div class="chart-container" style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 100%;">
+                @if (Model.DashboardData.AnnualSalesData.Any(s => s > 0) || Model.DashboardData.AnnualExpenseDataForSales.Any(e => e > 0))
+                {
+                    <canvas id="revenueExpenseChart"></canvas>
+                }
+                else
+                {
+                    <div class="alert alert-info text-center m-0">No annual sales or expense data found for @Model.CurrentYear.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // C# 資料傳遞到 JavaScript
+        const lineChartLabels = @Json.Serialize(Model.DashboardData.LineChartLabels);
+        const lineChartData = @Json.Serialize(Model.DashboardData.LineChartData);
+
+        const pieChartData = [
+        @Model.DashboardData.WalkInSales,
+        @Model.DashboardData.SanMarino,
+        @Model.DashboardData.SunvidaSales,
+        @Model.DashboardData.CebuRooms,
+        @Model.DashboardData.SugbuMercado, // <--- 傳入新的後端資料
+        @Model.DashboardData.OtherSales
+        ];
+
+        // 繪製每日營收折線圖
+        const ctxLine = document.getElementById('dailySalesChart');
+        new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: lineChartLabels,
+                datasets: [{
+                    label: 'Total Sales',
+                    data: lineChartData,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            }
+        });
+
+        // 繪製營收來源圓餅圖
+        const ctxPie = document.getElementById('salesPieChart');
+        new Chart(ctxPie, {
+            type: 'pie',
+            data: {
+                labels: ['Sales/Walk-in', 'SanMarino', 'Sunvida', 'CebuRooms', 'SugbuMercado', 'Others'],
+                datasets: [{
+                    label: 'Sales Source',
+                    data: pieChartData,
+                    backgroundColor: [
+                        'rgb(255, 99, 132)',
+                        'rgb(179, 0, 255)',
+                        'rgb(54, 162, 235)',
+                        'rgb(75, 192, 75)',  // 我為 SugbuMercado 選了一個不同的綠色()
+                        'rgb(201, 203, 207)',
+                        'rgb(255, 205, 86)'
+                    ],
+                    hoverOffset: 5
+                }]
+            }
+        });
+             // **新增：** 繪製年度銷售長條圖
+        // const annualLabels = @Json.Serialize(Model.DashboardData.AnnualSalesChartLabels);
+        // const annualData = @Json.Serialize(Model.DashboardData.AnnualSalesChartData);
+        // const ctxBar = document.getElementById('annualSalesChart');
+        // new Chart(ctxBar, {
+        //     type: 'bar',
+        //     data: {
+        //         labels: annualLabels,
+        //         datasets: [{
+        //             label: 'Total Sales',
+        //             data: annualData,
+        //             backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        //             borderColor: 'rgba(54, 162, 235, 1)',
+        //             borderWidth: 1
+        //         }]
+        //     },
+        //     options: {
+        //         scales: {
+        //             y: {
+        //                 beginAtZero: true
+        //             }
+        //         }
+        //     }
+        // });
+         // --- ↓↓↓ 新增：「營收 vs. 支出趨勢圖」 (長條圖) ↓↓↓ ---
+         @if (Model.DashboardData.AnnualSalesData.Any(s => s > 0) || Model.DashboardData.AnnualExpenseDataForSales.Any(e => e > 0))
+         {
+                <text>
+                const revExCtx = document.getElementById('revenueExpenseChart');
+                new Chart(revExCtx, {
+                    type: 'bar', // 使用長條圖
+                    data: {
+                        labels: @Json.Serialize(Model.DashboardData.AnnualTrendLabels),
+                        datasets: [
+                            {
+                                label: 'Total Revenue',
+                                data: @Json.Serialize(Model.DashboardData.AnnualSalesData),
+                                backgroundColor: 'rgba(75, 192, 192, 0.6)', // 綠色
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Total Expense',
+                                    data: @Json.Serialize(Model.DashboardData.AnnualExpenseDataForSales),
+                                backgroundColor: 'rgba(255, 99, 132, 0.6)', // 紅色
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { 
+                                display: true, 
+                                text: 'Monthly Revenue vs. Expense',
+                                    // --- 在這裡加入字體設定 ---
+                                font: {
+                                    size: 24,       // 字體大小 (數值，單位為 px)
+                                    weight: 'bold', // 字體粗細 (例如: 'bold', 'normal', '600')
+                                    family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif" // 字型 (選填)
+                                },
+                                color: '#333',      // 標題顏色 (選填)
+                                padding: {
+                                    top: 10,
+                                    bottom: 30
+                                }
+                                // -----------------------
+                            }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+                </text>
+         }
+    </script>
+}

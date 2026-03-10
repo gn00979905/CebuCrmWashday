@@ -1,0 +1,63 @@
+﻿@page
+@model WASHDAY_202508.Pages.ImportModel
+@{
+    ViewData["Title"] = "Import from Excel";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>Upload a formatted Excel file to bulk import monthly ledger data.</p>
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <form method="post" enctype="multipart/form-data">
+
+            @if (Model.SuccessMessage != null)
+            {
+                <div class="alert alert-success" role="alert">
+                    @Model.SuccessMessage
+                </div>
+            }
+            @if (Model.ErrorMessage != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @Model.ErrorMessage
+                </div>
+            }
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="SelectedYear" class="form-label"></label>
+                <select asp-for="SelectedYear" asp-items="Model.Years" class="form-select"></select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="SelectedMonth" class="form-label"></label>
+                <select asp-for="SelectedMonth" asp-items="Model.Months" class="form-select"></select>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="UploadedFile" class="form-label"></label>
+                <input asp-for="UploadedFile" type="file" class="form-control" accept=".xlsx" />
+                <span asp-validation-for="UploadedFile" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Import Data</button>
+        </form>
+    </div>
+    <div class="col-md-6">
+        <h5>Expected Excel Format:</h5>
+        <p>The file should have one header row, followed by data rows. The system will read the following columns:</p>
+        <ul>
+            <li><strong>Column A (1):</strong> Day (as a number, e.g., 1, 2, 3)</li>
+            <li><strong>Column B (2):</strong> Sales/walk in (number)</li>
+            <li><strong>Column C (3):</strong> Sunvida sales (number)</li>
+            <li><strong>Column D (4):</strong> Sugbu Mercado (number) </li>
+            <li><strong>Column E (5):</strong> OTHERS (number)</li>
+            <li><strong>Column G (7):</strong> EXPENSES (number)</li>
+        </ul>
+        <p>A special row with "RENTAL" in Column A will be processed as a monthly expense.</p>
+        <img src="~/images/image_613db9.png" class="img-fluid" alt="Excel format example" />
+    </div>
+</div>
