@@ -46,12 +46,16 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
 }
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// 【修改前】
+// if (app.Environment.IsDevelopment())
+// {
+//     app.UseSwagger();
+//     app.UseSwaggerUI();
+// }
 
+// 【修改後】：直接寫出來，不要包在 if 裡面
+app.UseSwagger();
+app.UseSwaggerUI();
 app.UseCors("AllowReactApp");
 app.UseAuthorization();
 
