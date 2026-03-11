@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using WASHDAY_202508.Data;
+using Microsoft.AspNetCore.HttpOverrides; // 1. 在檔案最上面加入這行
 
 namespace WASHDAY_202508
 {
@@ -30,7 +31,13 @@ namespace WASHDAY_202508
             builder.Services.AddControllers(); // <--- 1. 新增這行：註冊 API 控制器服務
 
             var app = builder.Build();
-
+            var forwardedHeadersOptions = new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+            };
+            forwardedHeadersOptions.KnownNetworks.Clear();
+            forwardedHeadersOptions.KnownProxies.Clear();
+            app.UseForwardedHeaders(forwardedHeadersOptions);
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
