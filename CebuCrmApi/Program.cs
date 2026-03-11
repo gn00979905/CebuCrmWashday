@@ -28,10 +28,11 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                 "http://localhost:5173",
-                "http://127.0.0.1:5173"
-              // 之後等你的 React 部署到 Render 產生靜態網址後，記得回來把網址加在這裡！
-              // 例如: "https://my-cebu-crm-frontend.onrender.com"
-              )
+                "http://127.0.0.1:5173", 
+                "https://ceub-crm.onrender.com" // 加上這行
+                // 之後等你的 React 部署到 Render 產生靜態網址後，記得回來把網址加在這裡！
+                // 例如: "https://my-cebu-crm-frontend.onrender.com"
+              ) 
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
