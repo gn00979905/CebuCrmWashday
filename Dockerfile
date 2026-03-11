@@ -7,7 +7,7 @@ COPY ./WASHDAY ./WASHDAY
 COPY ./CebuCrmApi ./CebuCrmApi
 
 # 編編並發布 WASHDAY (向下相容編譯 .NET 8)
-RUN dotnet publish "./WASHDAY/WASHDAY/WASHDAY 202508.csproj" -c Release -r linux-x64 --self-contained true -o /app/publish/washday
+RUN dotnet publish "./WASHDAY/WASHDAY/WASHDAY.csproj" -c Release -r linux-x64 --self-contained true -o /app/publish/washday
 
 # 編譯並發布 CebuCrmApi
 RUN dotnet publish ./CebuCrmApi/CebuCrmApi.csproj -c Release -r linux-x64 --self-contained true -o /app/publish/cebucrm
@@ -23,7 +23,7 @@ COPY --from=build /app/publish/cebucrm ./cebucrm
 COPY start.sh ./
 
 # 給予執行權限
-RUN chmod +x ./start.sh "./washday/WASHDAY 202508" ./cebucrm/CebuCrmApi
+RUN chmod +x ./start.sh "./washday/WASHDAY" ./cebucrm/CebuCrmApi
 
 # 設定啟動腳本
 CMD ["./start.sh"]
