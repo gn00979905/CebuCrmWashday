@@ -18,52 +18,57 @@ builder.Services.AddControllers();
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
+// ... 前面的 builder 設定 (AddControllers, DbContext 等) ...
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. 【修改】擴充 CORS 設定
+// 【修正 1】合併並簡化 CORS 設定
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", policy =>
+    // 我們建立一個統一的 Policy 叫做 "AllowFrontend"
+    options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
                 "http://localhost:5173",
-                "http://127.0.0.1:5173", 
-                "https://ceub-crm.onrender.com" // 加上這行
-                // 之後等你的 React 部署到 Render 產生靜態網址後，記得回來把網址加在這裡！
-                // 例如: "https://my-cebu-crm-frontend.onrender.com"
-              ) 
+                "http://127.0.0.1:5173",
+                "https://ceub-crm.onrender.com" // 你的 Render 網址
+              )
               .AllowAnyHeader()
               .AllowAnyMethod();
+
+        // 如果你在開發階段真的不想管 Port，想完全開放 (不建議放上線用)：
+        // policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
 });
 
 var app = builder.Build();
 
-// 自動建立資料庫
+// --- 應用程式初始化與 Middleware 設定 ---
+
+// 【初始化資料庫與測試資料】
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
-    db.Database.EnsureCreated();
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<CrmDbContext>();
+    // 記得：確保你已經執行過 dotnet ef database update 了！
+    DbInitializer.Initialize(context);
 }
 
-// 【修改前】
-// if (app.Environment.IsDevelopment())
-// {
-//     app.UseSwagger();
-//     app.UseSwaggerUI();
-// }
-
-// 【修改後】：直接寫出來，不要包在 if 裡面
+// 【Swagger 設定】 (強制開啟，方便 Render 上也能看 API)
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseCors("AllowReactApp");
+
+// 【修正 2】確保 CORS 在正確的位置！
+// 必須放在 UseAuthorization 和 MapControllers 之前
+app.UseCors("AllowFrontend");
+
 app.UseAuthorization();
 
 // cebu-crm 本身的 API 路由
 app.MapControllers();
 
-// 啟動 YARP 反向代理
-app.MapReverseProxy();
+// 啟動 YARP 反向代理 (如果有設定的話)
+// app.MapReverseProxy(); 
 
 app.Run();

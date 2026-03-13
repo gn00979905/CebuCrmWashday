@@ -11,6 +11,12 @@ namespace CebuCrmApi.Data
         public DbSet<Client> Clients { get; set; }
         // 在 CrmDbContext.cs 裡面補上這行
         public DbSet<ServiceOrder> ServiceOrders { get; set; }
+        public DbSet<Room> Rooms { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
+//3.  **執行 Migration**：在終端機輸入以下指令來更新 SQLite 資料庫：
+//```bash
+//dotnet ef migrations add AddPmsTables
+//dotnet ef database update
 
         // 當資料庫第一次建立時，會自動塞入這些預設資料
         protected override void OnModelCreating(ModelBuilder modelBuilder)

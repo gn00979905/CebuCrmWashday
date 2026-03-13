@@ -7,7 +7,8 @@
         public string ServiceType { get; set; } = string.Empty; // Airbnb, Laundry, Car Rental, Cleaning
         public decimal Amount { get; set; }
         public string Status { get; set; } = "Pending";        // Pending, In Progress, Completed
-        public DateTime OrderDate { get; set; } = DateTime.Now;
+        //public DateTime OrderDate { get; set; } = DateTime.Now;
+        public DateTime OrderDate { get; set; }
         public string Notes { get; set; } = string.Empty;
     }
 }
