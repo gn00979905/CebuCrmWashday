@@ -8,13 +8,17 @@ namespace CebuCrmApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PmsController : Controller
+    public class PmsController : ControllerBase
     {
         private readonly CrmDbContext _context;
+
         public PmsController(CrmDbContext context)
         {
             _context = context;
         }
+
+        // --- 房間管理 (Rooms) ---
+
         [HttpGet("rooms")]
         public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
         {
@@ -28,6 +32,7 @@ namespace CebuCrmApi.Controllers
             await _context.SaveChangesAsync();
             return Ok(room);
         }
+
         // --- 訂單管理 (Bookings) ---
 
         // 取得特定日期範圍內的訂單 (供時間軸使用)
@@ -45,19 +50,69 @@ namespace CebuCrmApi.Controllers
         [HttpPost("bookings")]
         public async Task<ActionResult<Booking>> CreateBooking(Booking booking)
         {
-            // 簡單的防撞檢查
+            // 1. 防撞檢查：確保該房間在該時段沒有被預訂
             var overlap = await _context.Bookings.AnyAsync(b =>
                 b.RoomId == booking.RoomId &&
+                b.Status != BookingStatus.Cancelled && // 排除已取消的訂單
                 b.CheckInDate < booking.CheckOutDate &&
                 b.CheckOutDate > booking.CheckInDate);
 
             if (overlap)
             {
-                return BadRequest("該時段房間已被預訂");
+                return BadRequest("該時段房間已被預訂 (Room is already booked for these dates)");
             }
 
+            // 2. CRM 整合：尋找或建立客戶資料
+            // 嘗試透過名字尋找現有客戶 (實務上可能會用電話或 Email 判斷更準確)
+            var existingClient = await _context.Clients
+                .FirstOrDefaultAsync(c => c.Name.ToLower() == booking.GuestName.ToLower());
+
+            int clientId;
+
+            if (existingClient != null)
+            {
+                clientId = existingClient.Id; // 找到舊客，直接使用他的 ID
+            }
+            else
+            {
+                // 找不到，自動幫他在 CRM 裡建一筆新客戶 (Lead)
+                var newClient = new Client
+                {
+                    Name = booking.GuestName,
+                    Source = "Airbnb/Walk-in", // 標記來源
+                    Status = "New",
+                    Interest = $"Booked Room {booking.RoomId}",//, // 記錄他的興趣
+                    CreatedAt = DateTime.UtcNow // 給一個建立時間
+                };
+                _context.Clients.Add(newClient);
+                await _context.SaveChangesAsync(); // 先存檔以取得自動產生的 ID
+
+                clientId = newClient.Id;
+            }
+
+            // 將這筆訂單關聯到正確的客戶 ID
+            booking.CustomerId = clientId;
+            booking.CreatedAt = DateTime.UtcNow;
+
+            // 3. 儲存訂單
             _context.Bookings.Add(booking);
             await _context.SaveChangesAsync();
+
+            // 4. Service 整合：自動產生退房日的打掃任務
+            // 假設你有一個 ServiceOrder 的 Model
+            var cleaningJob = new ServiceOrder
+            {
+                ClientName = booking.GuestName,
+                ServiceType = "Airbnb Cleaning", // 這是你在前端設定的選項之一
+                Status = "Pending", // 待處理
+                Amount = 0, // 可以預設一個清潔費，或是留空由阿姨填寫
+                OrderDate = booking.CheckOutDate, // 設定在退房那天打掃
+                Notes = $"Auto-generated cleaning task for Room {booking.RoomId} after check-out."
+            };
+
+            _context.ServiceOrders.Add(cleaningJob);
+            await _context.SaveChangesAsync();
+
             return Ok(booking);
         }
     }
