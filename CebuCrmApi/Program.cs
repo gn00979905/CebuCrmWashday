@@ -52,6 +52,7 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<CrmDbContext>();
     // 【新增這一行】讓程式啟動時，自動執行類似 dotnet ef database update 的動作
+    context.Database.EnsureDeleted();
     context.Database.Migrate();
     // 記得：確保你已經執行過 dotnet ef database update 了！
     DbInitializer.Initialize(context);
