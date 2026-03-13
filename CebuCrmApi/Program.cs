@@ -72,6 +72,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 // 啟動 YARP 反向代理 (如果有設定的話)
-// app.MapReverseProxy(); 
+app.MapReverseProxy(); 
 
 app.Run();
