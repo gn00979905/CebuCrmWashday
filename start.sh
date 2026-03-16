@@ -1,11 +1,16 @@
 #!/bin/bash
 
-# 1. 啟動洗衣店 (WASHDAY)
-cd /app/washday
-# 既然已經改名沒空格了，"./WASHDAY" 的引號可加可不加，建議保持一致
-ASPNETCORE_URLS="http://localhost:5001" ./WASHDAY &
+# 1. 暫時清空 Render 的強制網址綁定，以免影響洗衣店
+export ASPNETCORE_URLS=
 
-# 2. 啟動 CRM 大門 (CebuCrmApi)
-cd /app/cebucrm
-# 使用 exec 可以讓這個程序接收 Render 的關閉訊號，部署會更穩定
-ASPNETCORE_URLS="http://0.0.0.0:$PORT" exec ./CebuCrmApi
+# 2. 啟動洗衣店 (背景執行)，明確綁定 5001
+dotnet WASHDAY/WASHDAY.dll --urls "http://127.0.0.1:5001" &
+
+# 3. 稍微等個 3 秒，讓洗衣店先跑起來，避免總機啟動太快找不到人
+sleep 3
+
+# 4. 把環境變數加回來，讓 CRM 吃 Render 分配的 PORT (這很重要)
+export ASPNETCORE_URLS="http://+:$PORT"
+
+# 5. 啟動 CRM 總機 (前景執行)
+dotnet cebu-crm/CebuCrmApi.dll
