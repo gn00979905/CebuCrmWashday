@@ -1,11 +1,13 @@
 #!/bin/bash
 
-# 1. 啟動洗衣店 (WASHDAY)
-cd /app/washday
-# 既然已經改名沒空格了，"./WASHDAY" 的引號可加可不加，建議保持一致
-ASPNETCORE_URLS="http://localhost:5001" ./WASHDAY &
+# 1. 啟動洗衣店：
+# 【注意】不再使用 dotnet 指令！直接執行 Linux 原生檔案，並強制綁定 127.0.0.1
+ASPNETCORE_URLS="http://127.0.0.1:5001" ./washday/WASHDAY &
 
-# 2. 啟動 CRM 大門 (CebuCrmApi)
-cd /app/cebucrm
-# 使用 exec 可以讓這個程序接收 Render 的關閉訊號，部署會更穩定
-ASPNETCORE_URLS="http://0.0.0.0:$PORT" exec ./CebuCrmApi
+# 2. 稍微等待 3 秒，讓洗衣店 (分機) 完全開機並跑完 Migrate
+sleep 3
+
+# 3. 啟動 CRM 總機：
+# 【注意】同樣直接執行原生檔案！並乖乖吃 Render 分配的 PORT
+export ASPNETCORE_URLS="http://+:$PORT"
+./cebucrm/CebuCrmApi
