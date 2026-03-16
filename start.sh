@@ -3,7 +3,7 @@
 # 1. 啟動洗衣店 (WASHDAY)
 cd /app/washday
 # 既然已經改名沒空格了，"./WASHDAY" 的引號可加可不加，建議保持一致
-ASPNETCORE_URLS="http://localhost:5001" ./WASHDAY &
+ASPNETCORE_URLS="http://127.0.0.1:5001" dotnet WASHDAY/WASHDAY.dll &
 
 # 2. 啟動 CRM 大門 (CebuCrmApi)
 cd /app/cebucrm
