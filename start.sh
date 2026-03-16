@@ -1,5 +1,5 @@
 #!/bin/bash
-export DOTNET_ROLL_FORWARD=Major
+
 # 1. 啟動洗衣店 (WASHDAY)
 cd /app/washday
 # 既然已經改名沒空格了，"./WASHDAY" 的引號可加可不加，建議保持一致
