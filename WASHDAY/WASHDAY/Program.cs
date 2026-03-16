@@ -37,7 +37,10 @@ namespace WASHDAY_202508
             };
             forwardedHeadersOptions.KnownNetworks.Clear();
             forwardedHeadersOptions.KnownProxies.Clear();
-            app.UseForwardedHeaders(forwardedHeadersOptions);
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseForwardedHeaders();
+            }
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
