@@ -56,8 +56,7 @@ namespace WASHDAY_202508
             }
 
             // 2. HttpsRedirection 必須放在 ForwardedHeaders 之後
-            app.UseHttpsRedirection();
-            
+            app.UseHttpsRedirection();  
             app.UseStaticFiles();
 
             app.UseRouting();
