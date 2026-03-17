@@ -18,7 +18,59 @@ namespace CebuCrmApi.Controllers
         }
 
         // --- 房間管理 (Rooms) ---
+        // 取得單一房間資訊
+        [HttpGet("rooms/{id}")]
+        public async Task<ActionResult<Room>> GetRoom(int id)
+        {
+            var room = await _context.Rooms.FindAsync(id);
+            if (room == null)
+            {
+                return NotFound();
+            }
+            return room;
+        }
 
+        // 更新房間狀態 (Clean / Dirty / Maintenance)
+        [HttpPut("rooms/{id}/status")]
+        public async Task<IActionResult> UpdateRoomStatus(int id, [FromBody] int newStatus)
+        {
+            var room = await _context.Rooms.FindAsync(id);
+            if (room == null)
+            {
+                return NotFound("找不到該房間");
+            }
+
+            // 更新狀態
+            // 假設 0 = Clean, 1 = Dirty, 2 = Maintenance
+            room.Status = (RoomStatus)newStatus;
+
+            // 標記為已修改並存檔
+            _context.Entry(room).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!RoomExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent(); // 204 No Content，代表更新成功且不需回傳資料
+        }
+
+        // 輔助方法：檢查房間是否存在
+        private bool RoomExists(int id)
+        {
+            return _context.Rooms.Any(e => e.Id == id);
+        }
         [HttpGet("rooms")]
         public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
         {
