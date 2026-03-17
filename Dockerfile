@@ -18,5 +18,4 @@ COPY --from=build /app/publish/cebucrm ./cebucrm
 COPY start.sh ./
 
 RUN chmod +x ./start.sh
-
 CMD ["./start.sh"]
