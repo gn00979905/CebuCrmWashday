@@ -86,7 +86,64 @@ namespace CebuCrmApi.Controllers
         }
 
         // --- 訂單管理 (Bookings) ---
+        // 編輯更新訂單
+        [HttpPut("bookings/{id}")]
+        public async Task<IActionResult> UpdateBooking(int id, Booking booking)
+        {
+            if (id != booking.Id)
+            {
+                return BadRequest("ID 參數不符");
+            }
 
+            // 防撞檢查 (排除自己這筆訂單)
+            var overlap = await _context.Bookings.AnyAsync(b =>
+                b.RoomId == booking.RoomId &&
+                b.Id != booking.Id &&
+                b.Status != BookingStatus.Cancelled &&
+                b.CheckInDate < booking.CheckOutDate &&
+                b.CheckOutDate > booking.CheckInDate);
+
+            if (overlap)
+            {
+                return BadRequest("修改後的時段與其他訂單衝突");
+            }
+
+            _context.Entry(booking).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.Bookings.Any(e => e.Id == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // 刪除訂單
+        [HttpDelete("bookings/{id}")]
+        public async Task<IActionResult> DeleteBooking(int id)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            _context.Bookings.Remove(booking);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
         // 取得特定日期範圍內的訂單 (供時間軸使用)
         [HttpGet("bookings")]
         public async Task<ActionResult<IEnumerable<Booking>>> GetBookings([FromQuery] DateTime start, [FromQuery] DateTime end)
