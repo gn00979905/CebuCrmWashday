@@ -224,5 +224,62 @@ namespace CebuCrmApi.Controllers
 
             return Ok(booking);
         }
+        // --- 房間管理 (Rooms) ---
+
+        // ... 原本的 GetRooms, CreateRoom, GetRoom, UpdateRoomStatus 保持不變 ...
+
+        // 👇 新增：編輯房間資訊 (例如改房號、改預設狀態)
+        [HttpPut("rooms/{id}")]
+        public async Task<IActionResult> UpdateRoom(int id, Room room)
+        {
+            if (id != room.Id)
+            {
+                return BadRequest("ID 參數不符");
+            }
+
+            _context.Entry(room).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!RoomExists(id))
+                {
+                    return NotFound("找不到該房間");
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // 👇 新增：刪除房間
+        [HttpDelete("rooms/{id}")]
+        public async Task<IActionResult> DeleteRoom(int id)
+        {
+            var room = await _context.Rooms.FindAsync(id);
+            if (room == null)
+            {
+                return NotFound("找不到該房間");
+            }
+
+            // ⚠️ 防呆機制：檢查這間房間是不是還有關聯的訂單 (Bookings)
+            var hasBookings = await _context.Bookings.AnyAsync(b => b.RoomId == id);
+            if (hasBookings)
+            {
+                // 如果已經有訂單，直接刪除會造成資料庫 Foreign Key 錯誤。
+                return BadRequest("無法刪除：此房間已有歷史訂單紀錄。建議將其狀態改為維修中(Maintenance)。");
+            }
+
+            _context.Rooms.Remove(room);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
