@@ -159,6 +159,11 @@ namespace CebuCrmApi.Controllers
         [HttpPost("bookings")]
         public async Task<ActionResult<Booking>> CreateBooking(Booking booking)
         {
+            // 👇 新增這段：防止 0 天或負數天的無效訂單
+            if (booking.CheckInDate >= booking.CheckOutDate)
+            {
+                return BadRequest("退房日期必須晚於入住日期 (Check-out must be at least 1 day after check-in).");
+            }
             // 1. 防撞檢查：確保該房間在該時段沒有被預訂
             var overlap = await _context.Bookings.AnyAsync(b =>
                 b.RoomId == booking.RoomId &&
