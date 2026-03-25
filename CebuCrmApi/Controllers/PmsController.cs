@@ -150,7 +150,7 @@ namespace CebuCrmApi.Controllers
         {
             // 搜尋邏輯：訂單的入住日小於查詢結束日，且退房日大於查詢起始日 (即有重疊)
             var bookings = await _context.Bookings
-                .Where(b => b.CheckInDate < end && b.CheckOutDate > start)
+                .Where(b => b.CheckInDate < end && b.CheckOutDate > start.AddDays(2))
                 .ToListAsync();
 
             return Ok(bookings);
@@ -209,8 +209,8 @@ namespace CebuCrmApi.Controllers
             //booking.CreatedAt = DateTime.UtcNow;
 
             //// 3. 儲存訂單
-            //_context.Bookings.Add(booking);
-            //await _context.SaveChangesAsync();
+            _context.Bookings.Add(booking);
+            await _context.SaveChangesAsync();
 
             // 4. Service 整合：自動產生退房日的打掃任務
             // 假設你有一個 ServiceOrder 的 Model
