@@ -150,7 +150,7 @@ namespace CebuCrmApi.Controllers
         {
             // 搜尋邏輯：訂單的入住日小於查詢結束日，且退房日大於查詢起始日 (即有重疊)
             var bookings = await _context.Bookings
-                .Where(b => b.CheckInDate < end.AddDays(30) && b.CheckOutDate > start.AddDays(30))
+                .Where(b => b.CheckInDate < end && b.CheckOutDate > start)
                 .ToListAsync();
 
             return Ok(bookings);
