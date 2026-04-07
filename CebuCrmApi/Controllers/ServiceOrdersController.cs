@@ -23,15 +23,7 @@ namespace CebuCrmApi.Controllers
             return Ok(order);
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteOrder(int id)
-        {
-            var order = await _context.ServiceOrders.FindAsync(id);
-            if (order == null) return NotFound();
-            _context.ServiceOrders.Remove(order);
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
+
         // 編輯/更新 Service
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateServiceOrder(int id, ServiceOrder serviceOrder)
