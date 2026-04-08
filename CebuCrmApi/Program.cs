@@ -38,7 +38,7 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
 
         // 如果你在開發階段真的不想管 Port，想完全開放 (不建議放上線用)：
-        // policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
 });
 

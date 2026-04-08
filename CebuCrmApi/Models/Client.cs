@@ -1,14 +1,25 @@
-﻿namespace CebuCrmApi.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CebuCrmApi.Models
 {
     public class Client
     {
+        [Key]
         public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Phone { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Interest { get; set; } = string.Empty; // 客戶感興趣的物件類型
-        public string Status { get; set; } = "New";          // New, Viewing, Closed
-        public string Source { get; set; } = "Unknown";     // FB, Referral, Airbnb, etc.
-        public DateTime CreatedAt { get; set; }
+
+        [Required]
+        public string Name { get; set; }
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
+
+        // 興趣與狀態
+        public string? Interest { get; set; }
+        public string? Status { get; set; } // New, Contacted, Viewing, etc.
+        public string? Source { get; set; } // Facebook, Referral, etc.
+
+        // 👇 這次新增的房地產進階 CRM 欄位 👇
+        public string? Budget { get; set; }         // 預算 (例如: "3M - 5M")
+        public DateTime? NextFollowUp { get; set; } // 下次追蹤日 (允許為空 null)
+        public string? Notes { get; set; }          // 詳細備註
     }
 }
