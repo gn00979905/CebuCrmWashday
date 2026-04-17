@@ -217,43 +217,6 @@ namespace CebuCrmApi.Migrations
                     { 4, "https://example.com/floorplans/it-1015", 7900000m, 2, 48.0m, "Sold", "IT-1015" }
                 });
 
-            migrationBuilder.InsertData(
-                table: "Deals",
-                columns: new[] { "Id", "CreatedAt", "LeadId", "Notes", "PaymentPlan", "PriceSnapshot", "Stage", "UnitId" },
-                values: new object[,]
-                {
-                    { 1, new DateTime(2026, 4, 6, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "Lead wants a flexible payment plan and Airbnb-ready turnover.", "30% DP over 24 months, 70% bank financing", 6350000m, "Reservation", 2 },
-                    { 2, new DateTime(2026, 4, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), 2, "Schedule a second viewing with spouse on Saturday.", "20% DP then cash-out on turnover", 7200000m, "Site Visit", 3 }
-                });
-
-            migrationBuilder.InsertData(
-                table: "DealActivities",
-                columns: new[] { "Id", "Date", "DealId", "Note", "Type" },
-                values: new object[,]
-                {
-                    { 1, new DateTime(2026, 4, 6, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "Discussed payment terms and rental strategy.", "Call" },
-                    { 2, new DateTime(2026, 4, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "Sent reservation confirmation and next payment reminder.", "Follow-up" },
-                    { 3, new DateTime(2026, 4, 9, 0, 0, 0, 0, DateTimeKind.Unspecified), 2, "Walked through amenity deck and model unit.", "Site Visit" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "DealPayments",
-                columns: new[] { "Id", "Amount", "Date", "DealId", "Note", "Type" },
-                values: new object[,]
-                {
-                    { 1, 50000m, new DateTime(2026, 4, 7, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "Reservation fee received", "Reservation" },
-                    { 2, 180000m, new DateTime(2026, 4, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), 1, "First down payment installment", "DP" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "InvestmentSnapshots",
-                columns: new[] { "DealId", "AirbnbEstimate", "RentalEstimate", "Roi", "UpdatedAt" },
-                values: new object[,]
-                {
-                    { 1, 51000m, 32000m, 8.4m, new DateTime(2026, 4, 7, 0, 0, 0, 0, DateTimeKind.Unspecified) },
-                    { 2, 56000m, 35000m, 7.1m, new DateTime(2026, 4, 9, 0, 0, 0, 0, DateTimeKind.Unspecified) }
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_DealActivities_DealId",
                 table: "DealActivities",
