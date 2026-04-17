@@ -3,6 +3,7 @@ using System;
 using CebuCrmApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CebuCrmApi.Migrations
 {
     [DbContext(typeof(CrmDbContext))]
-    partial class CrmDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260414084928_AddDealCenteredCrm")]
+    partial class AddDealCenteredCrm
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
@@ -67,9 +70,6 @@ namespace CebuCrmApi.Migrations
                     b.Property<string>("Budget")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("BuyingTimeline")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -77,9 +77,6 @@ namespace CebuCrmApi.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Interest")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("InvestmentPurpose")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsForeigner")
@@ -101,16 +98,10 @@ namespace CebuCrmApi.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PaymentAbility")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Phone")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Preferences")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PreferredArea")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Source")
@@ -128,21 +119,17 @@ namespace CebuCrmApi.Migrations
                         {
                             Id = 1,
                             Budget = "4M - 6M PHP",
-                            BuyingTimeline = "Within 3 Months",
                             CreatedAt = new DateTime(2026, 4, 2, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "maria@example.com",
                             Interest = "Condo",
-                            InvestmentPurpose = "Rental Income",
                             IsForeigner = false,
                             IsOfw = true,
                             Name = "Maria Santos",
                             Nationality = "Filipino",
                             NextFollowUp = new DateTime(2026, 4, 18, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Notes = "Looking for an investment-friendly Cebu unit for family use and Airbnb.",
-                            PaymentAbility = "Bank Financing",
                             Phone = "09171234567",
                             Preferences = "2BR condo near the airport with short-term rental upside",
-                            PreferredArea = "Mactan / Airport Area",
                             Source = "Facebook",
                             Status = "Contacted"
                         },
@@ -150,21 +137,17 @@ namespace CebuCrmApi.Migrations
                         {
                             Id = 2,
                             Budget = "6M - 8M PHP",
-                            BuyingTimeline = "Immediate",
                             CreatedAt = new DateTime(2026, 4, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Email = "john@example.com",
                             Interest = "House & Lot",
-                            InvestmentPurpose = "Rental",
                             IsForeigner = true,
                             IsOfw = false,
                             Name = "John Smith",
                             Nationality = "American",
                             NextFollowUp = new DateTime(2026, 4, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Notes = "Needs clear foreign-buyer guidance and ROI estimate.",
-                            PaymentAbility = "Cash",
                             Phone = "09189876543",
                             Preferences = "RFO condo in IT Park with long-term rental potential",
-                            PreferredArea = "IT Park / Cebu City",
                             Source = "Referral",
                             Status = "Site Visit"
                         });
