@@ -4,7 +4,7 @@ namespace CebuCrmApi.Data
 {
     public class CrmDbContext:DbContext
     {
-        public CrmDbContext(DbContextOptions<CrmDbContext> options) : base(options) { }
+        public CrmDbContext(DbContextOptions<CrmDbContext> options) : base(options) { } 
 
         // 代表資料庫裡的一張資料表 (Table)
         public DbSet<Property> Properties { get; set; }
