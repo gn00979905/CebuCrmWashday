@@ -424,6 +424,10 @@ namespace CebuCrmApi.Migrations
                     b.Property<int>("Bedrooms")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -452,6 +456,7 @@ namespace CebuCrmApi.Migrations
                         {
                             Id = 1,
                             Bedrooms = 2,
+                            Category = "Beach Front",
                             Location = "Mactan, Cebu",
                             Price = 4500000m,
                             Status = "Available",
@@ -462,6 +467,7 @@ namespace CebuCrmApi.Migrations
                         {
                             Id = 2,
                             Bedrooms = 1,
+                            Category = "House and Lot",
                             Location = "IT Park, Cebu City",
                             Price = 3200000m,
                             Status = "Negotiating",
@@ -472,6 +478,7 @@ namespace CebuCrmApi.Migrations
                         {
                             Id = 3,
                             Bedrooms = 4,
+                            Category = "Resort",
                             Location = "Busay",
                             Price = 12000000m,
                             Status = "Sold",
