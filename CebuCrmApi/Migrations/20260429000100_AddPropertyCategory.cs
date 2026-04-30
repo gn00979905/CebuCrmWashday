@@ -17,26 +17,23 @@ namespace CebuCrmApi.Migrations
                 nullable: false,
                 defaultValue: "House and Lot");
 
-            migrationBuilder.UpdateData(
-                table: "Properties",
-                keyColumn: "Id",
-                keyValue: 1,
-                column: "Category",
-                value: "Beach Front");
+            migrationBuilder.Sql("""
+                UPDATE "Properties"
+                SET "Category" = 'Beach Front'
+                WHERE "Id" = 1 AND "Title" = 'Mactan Ocean View Condo';
+                """);
 
-            migrationBuilder.UpdateData(
-                table: "Properties",
-                keyColumn: "Id",
-                keyValue: 2,
-                column: "Category",
-                value: "House and Lot");
+            migrationBuilder.Sql("""
+                UPDATE "Properties"
+                SET "Category" = 'House and Lot'
+                WHERE "Id" = 2 AND "Title" = 'IT Park Studio Unit';
+                """);
 
-            migrationBuilder.UpdateData(
-                table: "Properties",
-                keyColumn: "Id",
-                keyValue: 3,
-                column: "Category",
-                value: "Resort");
+            migrationBuilder.Sql("""
+                UPDATE "Properties"
+                SET "Category" = 'Resort'
+                WHERE "Id" = 3 AND "Title" = 'Busay Mountain Villa';
+                """);
         }
 
         /// <inheritdoc />
