@@ -27,6 +27,10 @@ namespace CebuCrmApi.Models
         [Required]
         public string Status { get; set; } = "Available";
 
+        public string? PaymentPlan { get; set; }
+
+        public string? Discount { get; set; }
+
         public string? FloorPlanUrl { get; set; }
 
         public ICollection<Deal> Deals { get; set; } = new List<Deal>();

@@ -41,6 +41,8 @@ namespace CebuCrmApi.Controllers
                             u.SizeSqm,
                             u.Bedrooms,
                             u.Status,
+                            u.PaymentPlan,
+                            u.Discount,
                             u.FloorPlanUrl
                         })
                 })

@@ -226,6 +226,8 @@ namespace CebuCrmApi.Controllers
                         Price = d.Unit.Price,
                         SizeSqm = d.Unit.SizeSqm,
                         Status = d.Unit.Status,
+                        PaymentPlan = d.Unit.PaymentPlan,
+                        Discount = d.Unit.Discount,
                         FloorPlanUrl = d.Unit.FloorPlanUrl
                     },
                     Investment = d.InvestmentSnapshot == null
@@ -315,6 +317,8 @@ namespace CebuCrmApi.Controllers
             public decimal Price { get; set; }
             public decimal SizeSqm { get; set; }
             public string Status { get; set; } = string.Empty;
+            public string? PaymentPlan { get; set; }
+            public string? Discount { get; set; }
             public string? FloorPlanUrl { get; set; }
         }
 
