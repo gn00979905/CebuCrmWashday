@@ -22,6 +22,8 @@ namespace CebuCrmApi.Models
 
         public decimal SizeSqm { get; set; }
 
+        public int Bedrooms { get; set; } = 1;
+
         [Required]
         public string Status { get; set; } = "Available";
 

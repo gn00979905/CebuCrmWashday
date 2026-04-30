@@ -28,6 +28,7 @@ namespace CebuCrmApi.Controllers
                     p.Name,
                     p.Developer,
                     p.Type,
+                    p.Category,
                     p.Location,
                     Units = p.Units
                         .OrderBy(u => u.UnitCode)
@@ -38,6 +39,7 @@ namespace CebuCrmApi.Controllers
                             u.UnitCode,
                             u.Price,
                             u.SizeSqm,
+                            u.Bedrooms,
                             u.Status,
                             u.FloorPlanUrl
                         })

@@ -15,6 +15,9 @@ namespace CebuCrmApi.Models
         [Required]
         public string Type { get; set; } = "Pre-selling";
 
+        [Required]
+        public string Category { get; set; } = "House and Lot";
+
         public string? Location { get; set; }
 
         public ICollection<Unit> Units { get; set; } = new List<Unit>();
