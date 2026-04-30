@@ -39,6 +39,7 @@ namespace CebuCrmApi.Controllers
                     u.UnitCode,
                     u.Price,
                     u.SizeSqm,
+                    u.Bedrooms,
                     u.Status,
                     u.FloorPlanUrl
                 })
