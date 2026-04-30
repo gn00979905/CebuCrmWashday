@@ -54,10 +54,9 @@ using (var scope = app.Services.CreateScope())
     var context = services.GetRequiredService<CrmDbContext>();
 
     //context.Database.EnsureDeleted();
+    ClearStaleMigrationLock(context);
     MarkPropertyCategoryMigrationIfColumnAlreadyExists(context);
     context.Database.Migrate();
-    // 記得：確保你已經執行過 dotnet ef database update 了！
-    DbInitializer.Initialize(context);
 }
 
 // 【Swagger 設定】 (強制開啟，方便 Render 上也能看 API)
@@ -77,6 +76,40 @@ app.MapControllers();
 app.MapReverseProxy(); 
 
 app.Run();
+
+static void ClearStaleMigrationLock(CrmDbContext context)
+{
+    var connection = context.Database.GetDbConnection();
+    var shouldClose = connection.State != ConnectionState.Open;
+
+    if (shouldClose)
+    {
+        connection.Open();
+    }
+
+    try
+    {
+        if (!TableExists(connection, "__EFMigrationsLock"))
+        {
+            return;
+        }
+
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            DELETE FROM "__EFMigrationsLock"
+            WHERE "Id" = 1;
+            """;
+        command.ExecuteNonQuery();
+    }
+    finally
+    {
+        if (shouldClose)
+        {
+            connection.Close();
+        }
+    }
+}
+
 static void MarkPropertyCategoryMigrationIfColumnAlreadyExists(CrmDbContext context)
 {
     const string migrationId = "20260429000100_AddPropertyCategory";
