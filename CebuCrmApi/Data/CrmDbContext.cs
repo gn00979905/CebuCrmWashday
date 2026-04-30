@@ -42,9 +42,9 @@ namespace CebuCrmApi.Data
 
             // 房產種子資料 (保留之前的)
             modelBuilder.Entity<Property>().HasData(
-                new Property { Id = 1, Title = "Mactan Ocean View Condo", Type = "Pre-selling", Price = 4500000, Location = "Mactan, Cebu", Status = "Available", Bedrooms = 2 },
-                new Property { Id = 2, Title = "IT Park Studio Unit", Type = "Resale", Price = 3200000, Location = "IT Park, Cebu City", Status = "Negotiating", Bedrooms = 1 },
-                new Property { Id = 3, Title = "Busay Mountain Villa", Type = "Resale", Price = 12000000, Location = "Busay", Status = "Sold", Bedrooms = 4 }
+                new Property { Id = 1, Title = "Mactan Ocean View Condo", Type = "Pre-selling", Category = "Beach Front", Price = 4500000, Location = "Mactan, Cebu", Status = "Available", Bedrooms = 2 },
+                new Property { Id = 2, Title = "IT Park Studio Unit", Type = "Resale", Category = "House and Lot", Price = 3200000, Location = "IT Park, Cebu City", Status = "Negotiating", Bedrooms = 1 },
+                new Property { Id = 3, Title = "Busay Mountain Villa", Type = "Resale", Category = "Resort", Price = 12000000, Location = "Busay", Status = "Sold", Bedrooms = 4 }
             );
 
             // 客戶種子資料
